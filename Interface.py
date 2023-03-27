@@ -1,6 +1,8 @@
 from tkinter import Tk
 from Board import Board
 import tkinter as tk
+from Game import Game
+
 
 class Interface:
     __SZEROKOSC_EKRANU = 900
@@ -17,45 +19,49 @@ class Interface:
     __PRAWO = 103
     __LEWO = 104
 
+    screen = None
+    game = None
+
     def __init__(self):
-        screen = Tk()
-        screen.title('4 w linii')
-        screen.geometry(str(self.__SZEROKOSC_EKRANU) + "x" + str(self.__WYSOKOSC_EKRANU))
-        screen.resizable(False, False)
-        self.mainMenu(screen)
+        self.game = Game()
+        self.screen = Tk()
+        self.screen.title('4 w linii')
+        self.screen.geometry(str(self.__SZEROKOSC_EKRANU) + "x" + str(self.__WYSOKOSC_EKRANU))
+        self.screen.resizable(False, False)
+        self.mainMenu()
 
-
-    def mainMenu(self, screen):#GLOWNY INTERFACE Z WYBOREM TRYBU I WYJSCIEM
-        for widgets in screen.winfo_children():
+    def mainMenu(self):  # GLOWNY INTERFACE Z WYBOREM TRYBU I WYJSCIEM
+        for widgets in self.screen.winfo_children():
             widgets.destroy()
-        screen.configure(bg=self.__BACKGROUD_COLOR)
+        self.screen.configure(bg=self.__BACKGROUD_COLOR)
 
-        game_title = tk.Label(screen, text="4 IN LINE", font=('Arial', 32))
+        game_title = tk.Label(self.screen, text="Connect 4", font=('Arial', 32))
         game_title.place(relx=0.5, rely=0.04, anchor='n')
         game_title.configure(bg=self.__BACKGROUD_COLOR)
         game_title.configure(anchor='center')
 
-        button_BOT = tk.Button(screen, text="Graj przeciwko SI", fg="black", command=lambda: self.graBOT(screen),
-                                    height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
+        button_BOT = tk.Button(self.screen, text="Graj przeciwko SI", fg="black",
+                               command=lambda: self.graBOT(),
+                               height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
                                bg=self.__BUTTONS_COLOR)
         button_BOT.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=125)
 
-        button_1v1 = tk.Button(screen, text="Gra na 2 graczy", fg="black", command=lambda: self.gra1v1(screen),
+        button_1v1 = tk.Button(self.screen, text="Gra na 2 graczy", fg="black", command=lambda: self.gra1v1(),
                                height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
                                bg=self.__BUTTONS_COLOR)
         button_1v1.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=225)
 
-        button_wyjdz = tk.Button(screen, text="Wyjdź", fg="black", command=quit, height=self.__WYSOKOSC_PRZYCISKU,
-                                    width=self.__SZEROKOSC_PRZYCISKU_MENU, bg=self.__BUTTONS_COLOR)
+        button_wyjdz = tk.Button(self.screen, text="Wyjdź", fg="black", command=quit, height=self.__WYSOKOSC_PRZYCISKU,
+                                 width=self.__SZEROKOSC_PRZYCISKU_MENU, bg=self.__BUTTONS_COLOR)
         button_wyjdz.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=375)
 
-        screen.mainloop()
+        self.screen.mainloop()
 
-    def clear_window(self, screen):
-        for widgets in screen.winfo_children():
+    def clear_window(self):
+        for widgets in self.screen.winfo_children():
             widgets.destroy()
 
-    def printBoard(self, screen, board):
+    def printBoard(self):
         board_rows = 6
         board_cols = 7
         canvas_width = 400
@@ -63,7 +69,7 @@ class Interface:
         cell_size = 40
         cell_padding = 5
 
-        canvas = tk.Canvas(screen, width=canvas_width, height=canvas_height)
+        canvas = tk.Canvas(self.screen, width=canvas_width, height=canvas_height)
         canvas.configure(bg=self.__BACKGROUD_COLOR)
         canvas.pack()
 
@@ -82,31 +88,37 @@ class Interface:
                 y1 = board_y + row * (cell_size + cell_padding)
                 x2 = x1 + cell_size
                 y2 = y1 + cell_size
-                
+
                 # draw the cell
-                if board.getCells()[board_rows - 1 - row][col] == 0:
+                tmp = self.game.getArr()
+                if tmp[row][col] == 0:
                     canvas.create_rectangle(x1, y1, x2, y2, fill='white', outline='black')
-                elif board.getCells()[board_rows - 1 - row][col] == 1:
+                elif tmp[row][col] == 1:
                     canvas.create_rectangle(x1, y1, x2, y2, fill='blue', outline='black')
                 else:
                     canvas.create_rectangle(x1, y1, x2, y2, fill='red', outline='black')
 
         for i in range(board_cols):
-            button = tk.Button(screen, text="  ", command=lambda i=i: self.move(screen, i, board),
+            button = tk.Button(self.screen, text="  ", command=lambda i=i: self.move(i),
                                height=2, width=5)
-            button.place(x=x1 - (cell_size + cell_padding)/2 + i * (cell_size + cell_padding), y= y2 + 20)
+            button.place(x=x1 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 20)
 
-    def graBOT(self, screen): #TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
+    def graBOT(self, ):  # TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
         print("bot")
 
-    def move(self, screen, i, board):
-        board.addCoin(i)
-        self.clear_window(screen)
-        self.printBoard(screen, board)
-    def gra1v1(self, screen):
+    def move(self, i):
+        stan = self.game.dodajKrazek(i)
+        if stan == 11:
+            print("Wygral gracz 1")
+        elif stan == 12:
+            print("Wygral gracz 2")
+        self.clear_window()
+        self.printBoard()
+
+    def gra1v1(self):
         board = Board()
-        self.clear_window(screen)
+        self.clear_window()
         while board.ifLast():
-            self.clear_window(screen)
-            self.printBoard(screen, board)
+            self.clear_window()
+            self.printBoard()
             break
