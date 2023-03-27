@@ -1,4 +1,5 @@
 from tkinter import Tk
+from Board import Board
 import tkinter as tk
 
 class Interface:
@@ -24,7 +25,7 @@ class Interface:
         self.mainMenu(screen)
 
 
-    def mainMenu(self, screen):
+    def mainMenu(self, screen):#GLOWNY INTERFACE Z WYBOREM TRYBU I WYJSCIEM
         for widgets in screen.winfo_children():
             widgets.destroy()
         screen.configure(bg=self.__BACKGROUD_COLOR)
@@ -50,9 +51,62 @@ class Interface:
 
         screen.mainloop()
 
-    def graBOT(self, screen):
+    def clear_window(self, screen):
+        for widgets in screen.winfo_children():
+            widgets.destroy()
 
-        print("botek")
+    def printBoard(self, screen, board):
+        board_rows = 6
+        board_cols = 7
+        canvas_width = 400
+        canvas_height = 500
+        cell_size = 40
+        cell_padding = 5
 
+        canvas = tk.Canvas(screen, width=canvas_width, height=canvas_height)
+        canvas.configure(bg=self.__BACKGROUD_COLOR)
+        canvas.pack()
+
+        board_width = board_cols * (cell_size + cell_padding) - cell_padding
+        board_height = board_rows * (cell_size + cell_padding) - cell_padding
+        board_x = (canvas_width - board_width) // 2
+        board_y = (canvas_height - board_height) // 2
+
+        # draw the game board on the canvas
+        x1 = 20
+        y2 = 20
+        for row in range(board_rows):
+            for col in range(board_cols):
+                # calculate the coordinates of the cell
+                x1 = board_x + col * (cell_size + cell_padding)
+                y1 = board_y + row * (cell_size + cell_padding)
+                x2 = x1 + cell_size
+                y2 = y1 + cell_size
+                
+                # draw the cell
+                if board.getCells()[board_rows - 1 - row][col] == 0:
+                    canvas.create_rectangle(x1, y1, x2, y2, fill='white', outline='black')
+                elif board.getCells()[board_rows - 1 - row][col] == 1:
+                    canvas.create_rectangle(x1, y1, x2, y2, fill='blue', outline='black')
+                else:
+                    canvas.create_rectangle(x1, y1, x2, y2, fill='red', outline='black')
+
+        for i in range(board_cols):
+            button = tk.Button(screen, text="  ", command=lambda i=i: self.move(screen, i, board),
+                               height=2, width=5)
+            button.place(x=x1 - (cell_size + cell_padding)/2 + i * (cell_size + cell_padding), y= y2 + 20)
+
+    def graBOT(self, screen): #TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
+        print("bot")
+
+    def move(self, screen, i, board):
+        board.addCoin(i)
+        self.clear_window(screen)
+        self.printBoard(screen, board)
     def gra1v1(self, screen):
-        print("niebotek")
+        board = Board()
+        self.clear_window(screen)
+        while board.ifLast():
+            self.clear_window(screen)
+            self.printBoard(screen, board)
+            break
