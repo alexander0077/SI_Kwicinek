@@ -63,6 +63,7 @@ class Game:
             for r in range(3, self.__wysokosc):
                 if self.__gameArr[r][c] == gracz and self.__gameArr[r - 1][c + 1] == gracz and \
                         self.__gameArr[r - 2][c + 2] == gracz and self.__gameArr[r - 3][c + 3] == gracz:
+                    print("siema")
                     return True
 
     def getArr(self):
