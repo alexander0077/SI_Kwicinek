@@ -2,8 +2,8 @@ import random
 import copy
 
 
-class MinMaxAgent:
-    def __init__(self, my_token=1, initial_depth = 3):
+class MinMaxABAgent:
+    def __init__(self, my_token=1, initial_depth=6):
         self.my_token = my_token
         if my_token == 2:
             self.pNum = -1
@@ -17,28 +17,23 @@ class MinMaxAgent:
         for drop in pos_drops:
             tmp = copy.deepcopy(connect4)
             tmp.dodajKrazek(drop)
-            results.append(self.minmax(tmp, self.pNum, self.initial_depth))
-        isZero = False
-        zeroTab = []
-        for i in range(len(results)):
-            if self.pNum == -1:
-                if results[i] == 1:
-                    return pos_drops[i]
-                elif results[i] == 0:
-                    isZero = True
-                    zeroTab.append(pos_drops[i])
-            else:
-                if results[i] == -1:
-                    return pos_drops[i]
-                elif results[i] == 0:
-                    isZero = True
-                    zeroTab.append(pos_drops(i))
-        if isZero:
-            return random.choice(zeroTab)
-        else:
+            results.append(self.minmax(tmp, self.pNum, 6))
+        allEquall = True
+        ele = results[0]
+        for i in results:
+            if i != ele:
+                allEquall = False
+                break
+        if allEquall:
             return random.choice(pos_drops)
+        if self.pNum == -1:
+            max_index = results.index(max(results))
+            return pos_drops[max_index]
+        else:
+            min_index = results.index(min(results))
+            return pos_drops[min_index]
 
-    def minmax(self, connect4, maximizingPlayer, glebia):
+    def minmax(self, connect4, maximizingPlayer, glebia, alpha=-1000, beta=1000):
         if glebia == 0:
             return 0
         pos_drops = connect4.possible_drops()
@@ -60,12 +55,18 @@ class MinMaxAgent:
             for board in pos_drops:
                 tmp = copy.deepcopy(connect4)
                 tmp.dodajKrazek(board)
-                value = max(value, self.minmax(tmp, maximizingPlayer * -1, glebia - 1))
+                value = max(value, self.minmax(tmp, maximizingPlayer * -1, glebia - 1, alpha, beta))
+                alpha = max(alpha, value)
+                if alpha >= beta:
+                    break
             return value
         else:
             value = 1000
             for board in pos_drops:
                 tmp2 = copy.deepcopy(connect4)
                 tmp2.dodajKrazek(board)
-                value = min(value, self.minmax(tmp2, maximizingPlayer * -1, glebia - 1))
+                value = min(value, self.minmax(tmp2, maximizingPlayer * -1, glebia - 1, alpha, beta))
+                beta = min(beta, value)
+                if alpha >= beta:
+                    break
             return value

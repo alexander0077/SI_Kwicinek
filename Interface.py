@@ -1,13 +1,16 @@
 from tkinter import Tk
+
+from Agenty.alphabetaagent import MinMaxABAgent
 from Board import Board
 import tkinter as tk
 from Game import Game
-from minmaxagent import MinMaxAgent
+from Agenty.minmaxagent import MinMaxAgent
 
 
 class Interface:
     __ZAIMPLEMENTOWANE_BOTY = [
-        "MinMax"
+        "MinMax",
+        "AlphaBeta"
     ]
     __SZEROKOSC_EKRANU = 900
     __WYSOKOSC_EKRANU = 600
@@ -121,6 +124,7 @@ class Interface:
         if self.game.current_Player == 2:
             return
         self.game.dodajKrazek(i)
+        # TODO dodac przerwanie gry i wyswietlenie kto wygral
         if self.game.wining_player == 1:
             print("Wygral gracz 1")
         elif self.game.wining_player == 2:
@@ -137,6 +141,9 @@ class Interface:
         if self.bot1.get() == "MinMax":
             # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
             self.instancjaBota1 = MinMaxAgent(2, 4)
+        elif self.bot1.get() == "AlphaBeta":
+            # TODO tak jak wyzej, dodac opcje wyboru glebi
+            self.instancjaBota1 = MinMaxABAgent(2, 6)
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
