@@ -4,6 +4,8 @@ class Game:
     # gameArr ma wartosci 0 - nic nie ma, 1- gracz jeden ma krazek, 2- gracz 2 ma krazek na danym miejscu
     __gameArr = None
     current_Player = 1
+    #remis - 0, wygrana 1 - 1, wygrana 2 - 2, gra w toku - -1
+    wining_player = -1
 
     def __init__(self, szerokosc=7, wysokosc=6):
         self.__wysokosc = wysokosc
@@ -27,7 +29,7 @@ class Game:
                 # wykonano legalny ruch, spr czy wygrana, jesli tak zwroc jakis numer, jesli nie to zwroc 0
 
                 if self.sprawdzWygrana(self.current_Player):
-                    return 10 + self.current_Player
+                    self.wining_player = self.current_Player
                 if self.current_Player == 1:
                     self.current_Player = 2
                 else:
@@ -35,6 +37,28 @@ class Game:
                 return 0
         # nie mozna wykonac ruchu, bo sie plansza przepelni, zwroc 1
         return 1
+
+    #metoda zwraca gdzie mozna wrzucic krazek
+    def possible_drops(self):
+        return [n_column for n_column in range(self.__szerokosc) if self.__gameArr[0][n_column] == 0]
+
+    #metoda zwraca wszystkie czwórki z planszy
+    def iter_fours(self):
+        # horizontal
+        for n_row in range(self.__wysokosc):
+            for start_column in range(self.__szerokosc-3):
+                yield self.__gameArr[n_row][start_column:start_column+4]
+
+        # vertical
+        for n_column in range(self.__szerokosc):
+            for start_row in range(self.__wysokosc-3):
+                yield [self.__gameArr[n_row][n_column] for n_row in range(start_row, start_row+4)]
+
+        # diagonal
+        for n_row in range(self.__wysokosc-3):
+            for n_column in range(self.__szerokosc-3):
+                yield [self.__gameArr[n_row+i][n_column+i] for i in range(4)]  # decreasing
+                yield [self.__gameArr[n_row+i][self.__szerokosc-1-n_column-i] for i in range(4)]  # increasing
 
     def sprawdzWygrana(self, gracz):
         # check horizontal loc
@@ -63,7 +87,6 @@ class Game:
             for r in range(3, self.__wysokosc):
                 if self.__gameArr[r][c] == gracz and self.__gameArr[r - 1][c + 1] == gracz and \
                         self.__gameArr[r - 2][c + 2] == gracz and self.__gameArr[r - 3][c + 3] == gracz:
-                    print("siema")
                     return True
 
     def getArr(self):

@@ -2,9 +2,13 @@ from tkinter import Tk
 from Board import Board
 import tkinter as tk
 from Game import Game
+from minmaxagent import MinMaxAgent
 
 
 class Interface:
+    __ZAIMPLEMENTOWANE_BOTY = [
+        "MinMax"
+    ]
     __SZEROKOSC_EKRANU = 900
     __WYSOKOSC_EKRANU = 600
     __SZEROKOSC_PRZYCISKU_MENU = 40
@@ -19,12 +23,16 @@ class Interface:
     __PRAWO = 103
     __LEWO = 104
 
+    instancjaBota1 = None
+
     screen = None
     game = None
 
     def __init__(self):
         self.game = Game()
         self.screen = Tk()
+        self.bot1 = tk.StringVar(self.screen)
+        self.bot1.set(self.__ZAIMPLEMENTOWANE_BOTY[0])
         self.screen.title('4 w linii')
         self.screen.geometry(str(self.__SZEROKOSC_EKRANU) + "x" + str(self.__WYSOKOSC_EKRANU))
         self.screen.resizable(False, False)
@@ -39,7 +47,10 @@ class Interface:
         game_title.place(relx=0.5, rely=0.04, anchor='n')
         game_title.configure(bg=self.__BACKGROUD_COLOR)
         game_title.configure(anchor='center')
-
+        # DROP DOWN MENU DO WYBORU BOTA DO GRANIA
+        # TODO ZROBIC DRUGI DROP DOWN ORAZ OPCJE ZEBY 2 BOTY GRALY PRZECIWKO SOBIE
+        list_wybor_BOTA1 = tk.OptionMenu(self.screen, self.bot1, *self.__ZAIMPLEMENTOWANE_BOTY)
+        list_wybor_BOTA1.pack()
         button_BOT = tk.Button(self.screen, text="Graj przeciwko SI", fg="black",
                                command=lambda: self.graBOT(),
                                height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
@@ -107,15 +118,26 @@ class Interface:
         print("bot")
 
     def move(self, i):
-        stan = self.game.dodajKrazek(i)
-        if stan == 11:
+        if self.game.current_Player == 2:
+            return
+        self.game.dodajKrazek(i)
+        if self.game.wining_player == 1:
             print("Wygral gracz 1")
-        elif stan == 12:
+        elif self.game.wining_player == 2:
             print("Wygral gracz 2")
+        elif self.game.wining_player == 0:
+            print("Nastapil remis")
+        self.clear_window()
+        self.printBoard()
+        self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
         self.clear_window()
         self.printBoard()
 
     def gra1v1(self):
+        if self.bot1.get() == "MinMax":
+            # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
+            self.instancjaBota1 = MinMaxAgent(2, 4)
+        # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
         while board.ifLast():
