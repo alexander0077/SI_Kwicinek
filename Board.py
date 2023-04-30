@@ -1,6 +1,7 @@
 from tkinter import Tk
 import tkinter as tk
 
+
 class Board:
     __CELLS = list()
     __TURN_1 = True
@@ -10,6 +11,7 @@ class Board:
 
     def getCells(self):
         return self.__CELLS
+
     def ifLast(self):
         return True
 

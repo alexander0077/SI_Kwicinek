@@ -13,6 +13,8 @@ class MinMaxABAgent:
 
     def decide(self, connect4):
         pos_drops = connect4.possible_drops()
+        if not pos_drops:
+            return None
         results = []
         for drop in pos_drops:
             tmp = copy.deepcopy(connect4)

@@ -13,6 +13,8 @@ class MinMaxAgent:
 
     def decide(self, connect4):
         pos_drops = connect4.possible_drops()
+        if not pos_drops:
+            return None
         results = []
         for drop in pos_drops:
             tmp = copy.deepcopy(connect4)
@@ -32,7 +34,7 @@ class MinMaxAgent:
                     return pos_drops[i]
                 elif results[i] == 0:
                     isZero = True
-                    zeroTab.append(pos_drops(i))
+                    zeroTab.append(pos_drops[i])
         if isZero:
             return random.choice(zeroTab)
         else:
