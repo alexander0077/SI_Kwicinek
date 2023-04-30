@@ -1,6 +1,7 @@
 from tkinter import Tk
 
 from Agenty.alphabetaagent import MinMaxABAgent
+from Agenty.montecarloagent import MonteCarloTreeSearchAgent
 from Board import Board
 import tkinter as tk
 from Game import Game
@@ -10,7 +11,8 @@ from Agenty.minmaxagent import MinMaxAgent
 class Interface:
     __ZAIMPLEMENTOWANE_BOTY = [
         "MinMax",
-        "AlphaBeta"
+        "AlphaBeta",
+        "MonteCarloTreeSearch"
     ]
     __SZEROKOSC_EKRANU = 900
     __WYSOKOSC_EKRANU = 600
@@ -144,6 +146,9 @@ class Interface:
         elif self.bot1.get() == "AlphaBeta":
             # TODO tak jak wyzej, dodac opcje wyboru glebi
             self.instancjaBota1 = MinMaxABAgent(2, 6)
+        elif self.bot1.get() == "MonteCarloTreeSearch":
+            # TODO tj wyżej ale ilosc iteracji i constant(?)
+            self.instancjaBota1 = MonteCarloTreeSearchAgent(2, 1000, 0.3)
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()

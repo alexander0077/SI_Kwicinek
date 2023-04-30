@@ -16,7 +16,7 @@ class MonteCarloGameState:
 
 
 class MonteCarloTreeSearchAgent:
-    def __init__(self, my_token=1, initial_iterations=1000, tradeOffConstant=8):
+    def __init__(self, my_token=1, initial_iterations=1000, tradeOffConstant=2):
         self.my_token = my_token
         if my_token == 2:
             self.pNum = -1
@@ -25,7 +25,22 @@ class MonteCarloTreeSearchAgent:
         self.initial_iterations = initial_iterations
         self.tradeOffConstant = tradeOffConstant
 
-    # TODO implement decide method
+    def decide(self, board):
+        root = MonteCarloGameState(self.pNum, board)
+        for i in range(self.initial_iterations):
+            self.alghoritm(root)
+        if not root.children:
+            # pelna plansza
+            return -1
+        # algorytm UCT
+        UCTarr = []
+        for child in root.children:
+            weight = (child.visited-child.wins)/(child.visited + 0.001) + self.tradeOffConstant * (math.sqrt((math.log(root.visited) / (child.visited + 0.001))))
+            UCTarr.append(weight)
+
+        bestUCTidx = UCTarr.index(max(UCTarr))
+        childToChoose = root.children[bestUCTidx]
+        return childToChoose.column_diffrence
 
     def alghoritm(self, state: MonteCarloGameState):
         state.visited += 1
@@ -35,11 +50,11 @@ class MonteCarloTreeSearchAgent:
                     state.wins += 1
                     return 1
             elif four == [2, 2, 2, 2]:
-                if state.current_player == 2:
+                if state.current_player == -1:
                     state.wins += 1
-                    return 2
+                    return -1
         pos_drops = state.board.possible_drops()
-        if pos_drops is None:
+        if not pos_drops:
             state.wins += 0.5
             return 0
 
@@ -55,9 +70,11 @@ class MonteCarloTreeSearchAgent:
         # uzywamy algorytmu UCT
         UCTarr = []
         for child in state.children:
-            weight = child.wins + self.tradeOffConstant * (math.sqrt((math.log(state.visited) / (child.visited + 0.5))))
+            weight = child.wins/(child.visited + 0.001) + self.tradeOffConstant * (math.sqrt((math.log(state.visited) / (child.visited + 0.001))))
             UCTarr.append(weight)
 
+        if not UCTarr:
+            ble = 1
         firstElement = UCTarr[0]
         isEqual = True
         for ele in UCTarr:
