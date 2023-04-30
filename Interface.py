@@ -1,10 +1,19 @@
 from tkinter import Tk
+
+from Agenty.alphabetaagent import MinMaxABAgent
+from Agenty.montecarloagent import MonteCarloTreeSearchAgent
 from Board import Board
 import tkinter as tk
 from Game import Game
+from Agenty.minmaxagent import MinMaxAgent
 
 
 class Interface:
+    __ZAIMPLEMENTOWANE_BOTY = [
+        "MinMax",
+        "AlphaBeta",
+        "MonteCarloTreeSearch"
+    ]
     __SZEROKOSC_EKRANU = 900
     __WYSOKOSC_EKRANU = 600
     __SZEROKOSC_PRZYCISKU_MENU = 40
@@ -19,12 +28,21 @@ class Interface:
     __PRAWO = 103
     __LEWO = 104
 
+    instancjaBota1 = None
+    instancjaBota2 = None
+
     screen = None
     game = None
+    wygraneBot1 = 0
+    wygraneBot2 = 0
 
     def __init__(self):
         self.game = Game()
         self.screen = Tk()
+        self.bot1 = tk.StringVar(self.screen)
+        self.bot1.set(self.__ZAIMPLEMENTOWANE_BOTY[0])
+        self.bot2 = tk.StringVar(self.screen)
+        self.bot2.set(self.__ZAIMPLEMENTOWANE_BOTY[0])
         self.screen.title('4 w linii')
         self.screen.geometry(str(self.__SZEROKOSC_EKRANU) + "x" + str(self.__WYSOKOSC_EKRANU))
         self.screen.resizable(False, False)
@@ -39,14 +57,18 @@ class Interface:
         game_title.place(relx=0.5, rely=0.04, anchor='n')
         game_title.configure(bg=self.__BACKGROUD_COLOR)
         game_title.configure(anchor='center')
-
-        button_BOT = tk.Button(self.screen, text="Graj przeciwko SI", fg="black",
+        # DROP DOWN MENUS DO WYBORU BOTA DO GRANIA
+        list_wybor_BOTA1 = tk.OptionMenu(self.screen, self.bot1, *self.__ZAIMPLEMENTOWANE_BOTY)
+        list_wybor_BOTA1.pack()
+        list_wybor_BOTA2 = tk.OptionMenu(self.screen, self.bot2, *self.__ZAIMPLEMENTOWANE_BOTY)
+        list_wybor_BOTA2.pack()
+        button_BOT = tk.Button(self.screen, text="Gra SI vs SI", fg="black",
                                command=lambda: self.graBOT(),
                                height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
                                bg=self.__BUTTONS_COLOR)
         button_BOT.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=125)
 
-        button_1v1 = tk.Button(self.screen, text="Gra na 2 graczy", fg="black", command=lambda: self.gra1v1(),
+        button_1v1 = tk.Button(self.screen, text="Gra przeciwko SI", fg="black", command=lambda: self.gra1v1(),
                                height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
                                bg=self.__BUTTONS_COLOR)
         button_1v1.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=225)
@@ -104,18 +126,83 @@ class Interface:
             button.place(x=x1 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 20)
 
     def graBOT(self, ):  # TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
-        print("bot")
+        if self.bot1.get() == "MinMax":
+            # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
+            self.instancjaBota1 = MinMaxAgent(1, 4)
+        elif self.bot1.get() == "AlphaBeta":
+            # TODO tak jak wyzej, dodac opcje wyboru glebi
+            self.instancjaBota1 = MinMaxABAgent(1, 6)
+        elif self.bot1.get() == "MonteCarloTreeSearch":
+            # TODO tj wyżej ale ilosc iteracji
+            self.instancjaBota1 = MonteCarloTreeSearchAgent(1, 1000, 0.95)
+        if self.bot2.get() == "MinMax":
+            # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
+            self.instancjaBota2 = MinMaxAgent(2, 4)
+        elif self.bot2.get() == "AlphaBeta":
+            # TODO tak jak wyzej, dodac opcje wyboru glebi
+            self.instancjaBota2 = MinMaxABAgent(2, 6)
+        elif self.bot2.get() == "MonteCarloTreeSearch":
+            # TODO tj wyżej ale ilosc iteracji
+            self.instancjaBota2 = MonteCarloTreeSearchAgent(2, 1000, 0.95)
+        # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
+        board = Board()
+        self.clear_window()
+        while self.game.wining_player == -1 and board.ifLast():
+            self.clear_window()
+            self.printBoard()
+            self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
+            self.clear_window()
+            self.printBoard()
+            self.screen.update_idletasks()
+            self.screen.update()
+            self.game.dodajKrazek(self.instancjaBota2.decide(self.game))
+            self.clear_window()
+            self.printBoard()
+            if self.game.wining_player == 1:
+                self.wygraneBot1 += 1
+            elif self.game.wining_player == 2:
+                self.wygraneBot2 += 1
+            elif self.game.wining_player == 0:
+                self.wygraneBot1 += 0.5
+                self.wygraneBot2 += 0.5
+            self.screen.update_idletasks()
+            self.screen.update()
+        print("")
+        print(self.bot1.get() + " wygrane: " + str(self.wygraneBot1))
+        print(self.bot2.get() + " wygrane: " + str(self.wygraneBot2))
+        self.game = Game()
+        self.graBOT()
+
+
 
     def move(self, i):
-        stan = self.game.dodajKrazek(i)
-        if stan == 11:
+        if self.game.current_Player == 2:
+            return
+        self.game.dodajKrazek(i)
+        # TODO dodac przerwanie gry i wyswietlenie kto wygral
+        if self.game.wining_player == 1:
             print("Wygral gracz 1")
-        elif stan == 12:
+        elif self.game.wining_player == 2:
             print("Wygral gracz 2")
+        elif self.game.wining_player == 0:
+            print("Nastapil remis")
+        self.clear_window()
+        self.printBoard()
+        self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
         self.clear_window()
         self.printBoard()
 
     def gra1v1(self):
+        if self.bot1.get() == "MinMax":
+            # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
+            self.instancjaBota1 = MinMaxAgent(2, 4)
+        elif self.bot1.get() == "AlphaBeta":
+            # TODO tak jak wyzej, dodac opcje wyboru glebi
+            self.instancjaBota1 = MinMaxABAgent(2, 6)
+        elif self.bot1.get() == "MonteCarloTreeSearch":
+            # TODO tj wyżej ale ilosc iteracji i constant(?)
+            self.instancjaBota1 = MonteCarloTreeSearchAgent(2, 1000, 0.95)
+        # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
         while board.ifLast():
