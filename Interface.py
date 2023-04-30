@@ -133,8 +133,8 @@ class Interface:
             # TODO tak jak wyzej, dodac opcje wyboru glebi
             self.instancjaBota1 = MinMaxABAgent(1, 6)
         elif self.bot1.get() == "MonteCarloTreeSearch":
-            # TODO tj wyżej ale ilosc iteracji i constant(?)
-            self.instancjaBota1 = MonteCarloTreeSearchAgent(1, 1000, 0.3)
+            # TODO tj wyżej ale ilosc iteracji
+            self.instancjaBota1 = MonteCarloTreeSearchAgent(1, 1000, 0.95)
         if self.bot2.get() == "MinMax":
             # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
             self.instancjaBota2 = MinMaxAgent(2, 4)
@@ -142,8 +142,8 @@ class Interface:
             # TODO tak jak wyzej, dodac opcje wyboru glebi
             self.instancjaBota2 = MinMaxABAgent(2, 6)
         elif self.bot2.get() == "MonteCarloTreeSearch":
-            # TODO tj wyżej ale ilosc iteracji i constant(?)
-            self.instancjaBota2 = MonteCarloTreeSearchAgent(2, 1000, 0.3)
+            # TODO tj wyżej ale ilosc iteracji
+            self.instancjaBota2 = MonteCarloTreeSearchAgent(2, 1000, 0.95)
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
@@ -201,7 +201,7 @@ class Interface:
             self.instancjaBota1 = MinMaxABAgent(2, 6)
         elif self.bot1.get() == "MonteCarloTreeSearch":
             # TODO tj wyżej ale ilosc iteracji i constant(?)
-            self.instancjaBota1 = MonteCarloTreeSearchAgent(2, 1000, 0.3)
+            self.instancjaBota1 = MonteCarloTreeSearchAgent(2, 1000, 0.95)
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
