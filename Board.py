@@ -15,6 +15,8 @@ class Board:
     def ifLast(self):
         return True
 
+
+
     def addCoin(self, i):
         iterator = 0
         while self.__CELLS[iterator][i] != 0:
