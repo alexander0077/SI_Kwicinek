@@ -1,10 +1,18 @@
 from tkinter import Tk
+from tkinter import ttk
+from Agenty.alphabetaagent import MinMaxABAgent
+from Agenty.montecarloagent import MonteCarloTreeSearchAgent
 from Board import Board
 import tkinter as tk
 from Game import Game
-
+from Agenty.minmaxagent import MinMaxAgent
 
 class Interface:
+    __ZAIMPLEMENTOWANE_BOTY = [
+        "MinMax",
+        "AlphaBeta",
+        "MonteCarloTreeSearch"
+    ]
     __SZEROKOSC_EKRANU = 900
     __WYSOKOSC_EKRANU = 600
     __SZEROKOSC_PRZYCISKU_MENU = 40
@@ -19,12 +27,23 @@ class Interface:
     __PRAWO = 103
     __LEWO = 104
 
+    instancjaBota1 = None
+    instancjaBota2 = None
+
     screen = None
     game = None
+    wygraneBot1 = 0
+    wygraneBot2 = 0
 
     def __init__(self):
         self.game = Game()
         self.screen = Tk()
+        self.bot1 = tk.StringVar(self.screen)
+        self.bot1.set(self.__ZAIMPLEMENTOWANE_BOTY[0])
+        self.bot1_value = 3 # wartosc bota 1: glebokosc/iteracje
+        self.bot2 = tk.StringVar(self.screen)
+        self.bot2.set(self.__ZAIMPLEMENTOWANE_BOTY[0])
+        self.bot2_value = 3 # wartosc bota 2: glebokosc/iteracje
         self.screen.title('4 w linii')
         self.screen.geometry(str(self.__SZEROKOSC_EKRANU) + "x" + str(self.__WYSOKOSC_EKRANU))
         self.screen.resizable(False, False)
@@ -40,13 +59,13 @@ class Interface:
         game_title.configure(bg=self.__BACKGROUD_COLOR)
         game_title.configure(anchor='center')
 
-        button_BOT = tk.Button(self.screen, text="Graj przeciwko SI", fg="black",
-                               command=lambda: self.graBOT(),
+        button_BOT = tk.Button(self.screen, text="Gra SI vs SI", fg="black",
+                               command=lambda: self.graBotInterface(),
                                height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
                                bg=self.__BUTTONS_COLOR)
         button_BOT.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=125)
 
-        button_1v1 = tk.Button(self.screen, text="Gra na 2 graczy", fg="black", command=lambda: self.gra1v1(),
+        button_1v1 = tk.Button(self.screen, text="Gra przeciwko SI", fg="black", command=lambda: self.gra1v1(),
                                height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
                                bg=self.__BUTTONS_COLOR)
         button_1v1.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=225)
@@ -103,19 +122,136 @@ class Interface:
                                height=2, width=5)
             button.place(x=x1 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 20)
 
-    def graBOT(self, ):  # TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
-        print("bot")
+    def graBOT(self, v1, v2):  # TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
+        if self.bot1.get() == "MinMax":
+            self.instancjaBota1 = MinMaxAgent(1, int(v1))
+        elif self.bot1.get() == "AlphaBeta":
+            self.instancjaBota1 = MinMaxABAgent(1, int(v1))
+        elif self.bot1.get() == "MonteCarloTreeSearch":
+            # TODO dodac mozliwosc zmiany ostatniego parametru
+            self.instancjaBota1 = MonteCarloTreeSearchAgent(1, int(v1), 0.95)
+        if self.bot2.get() == "MinMax":
+            self.instancjaBota2 = MinMaxAgent(2, int(v2))
+        elif self.bot2.get() == "AlphaBeta":
+            self.instancjaBota2 = MinMaxABAgent(2, int(v2))
+        elif self.bot2.get() == "MonteCarloTreeSearch":
+            # TODO dodac mozliwosc zmiany ostatniego parametru
+            self.instancjaBota2 = MonteCarloTreeSearchAgent(2, int(v2), 0.95)
+        # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
+        board = Board()
+        self.clear_window()
+        while self.game.wining_player == -1 and board.ifLast():
+            self.clear_window()
+            self.printBoard()
+            self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
+            self.clear_window()
+            self.printBoard()
+            self.screen.update_idletasks()
+            self.screen.update()
+            self.game.dodajKrazek(self.instancjaBota2.decide(self.game))
+            self.clear_window()
+            self.printBoard()
+            if self.game.wining_player == 1:
+                self.wygraneBot1 += 1
+            elif self.game.wining_player == 2:
+                self.wygraneBot2 += 1
+            elif self.game.wining_player == 0:
+                self.wygraneBot1 += 0.5
+                self.wygraneBot2 += 0.5
+            self.screen.update_idletasks()
+            self.screen.update()
+        print("")
+        print(self.bot1.get() + " wygrane: " + str(self.wygraneBot1))
+        print(self.bot2.get() + " wygrane: " + str(self.wygraneBot2))
+        self.game = Game()
+        self.graBOT(v1, v2)
+
+
+    def graBotInterface(self):
+        self.clear_window()
+        self.screen.configure(bg=self.__BACKGROUD_COLOR)
+
+        # canvas do wyboru botow
+        self.bot_choose_canvas = tk.Canvas(self.screen, width=300, height=200, bg=self.__BACKGROUD_COLOR, highlightthickness=0)
+        self.bot_choose_canvas.pack(side="top", anchor="center", pady=50)
+
+        def changeTagsBot1(screen):
+            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot1 == self.__ZAIMPLEMENTOWANE_BOTY[1]:
+                label_bot_1_tag.config(text="   Głębkość ")
+
+            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
+                label_bot_1_tag.config(text="   Ilość iteracji: ")
+
+        def changeTagsBot2(screen):
+            if self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot2 == self.__ZAIMPLEMENTOWANE_BOTY[1]:
+                label_bot_2_tag.config(text="   Głębkość ")
+
+            if self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
+                label_bot_2_tag.config(text="   Ilość iteracji: ")
+
+
+        # Wybor bota 1
+        label1 = tk.Label(self.bot_choose_canvas, text="BOT 1: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
+        label1.grid(row=0, column=0)
+        bot_menu1 = tk.OptionMenu(self.bot_choose_canvas, self.bot1, *self.__ZAIMPLEMENTOWANE_BOTY, command=changeTagsBot1)
+        bot_menu1.grid(row=0, column=1)
+        label_bot_1_tag = tk.Label(self.bot_choose_canvas, text="   Głębkość ", font=("Arial", 12),
+                                     bg=self.__BACKGROUD_COLOR)
+        label_bot_1_tag.grid(row=0, column=2)
+        self.bot1_value = tk.Entry(self.bot_choose_canvas)
+        self.bot1_value.grid(row=0, column=3)
+
+        # Wybor bot 2
+        label2 = tk.Label(self.bot_choose_canvas, text="BOT 2: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
+        label2.grid(row=1, column=0)
+        bot_menu2 = tk.OptionMenu(self.bot_choose_canvas, self.bot2, *self.__ZAIMPLEMENTOWANE_BOTY, command=changeTagsBot2)
+        bot_menu2.grid(row=1, column=1)
+        label_bot_2_tag = tk.Label(self.bot_choose_canvas, text="   Głębkość ", font=("Arial", 12),
+                                     bg=self.__BACKGROUD_COLOR)
+        label_bot_2_tag.grid(row=1, column=2)
+        self.bot2_value = tk.Entry(self.bot_choose_canvas)
+        self.bot2_value.grid(row=1, column=3)
+
+        start_button = tk.Button(self.screen, text="Rozpocznij gre", fg="black", command=lambda: self.graBOT(self.bot1_value.get(), self.bot2_value.get()),
+                               height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
+                               bg=self.__BUTTONS_COLOR)
+        start_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=225)
+
+        return_button = tk.Button(self.screen, text="Powrót", fg="black", command=lambda: self.mainMenu(),
+                               height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
+                               bg=self.__BUTTONS_COLOR)
+        return_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=400)
+
+
 
     def move(self, i):
-        stan = self.game.dodajKrazek(i)
-        if stan == 11:
+        if self.game.current_Player == 2:
+            return
+        self.game.dodajKrazek(i)
+        # TODO dodac przerwanie gry i wyswietlenie kto wygral
+        if self.game.wining_player == 1:
             print("Wygral gracz 1")
-        elif stan == 12:
+        elif self.game.wining_player == 2:
             print("Wygral gracz 2")
+        elif self.game.wining_player == 0:
+            print("Nastapil remis")
+        self.clear_window()
+        self.printBoard()
+        self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
         self.clear_window()
         self.printBoard()
 
     def gra1v1(self):
+        if self.bot1.get() == "MinMax":
+            # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
+            self.instancjaBota1 = MinMaxAgent(2, 4)
+        elif self.bot1.get() == "AlphaBeta":
+            # TODO tak jak wyzej, dodac opcje wyboru glebi
+            self.instancjaBota1 = MinMaxABAgent(2, 6)
+        elif self.bot1.get() == "MonteCarloTreeSearch":
+            # TODO tj wyżej ale ilosc iteracji i constant(?)
+            self.instancjaBota1 = MonteCarloTreeSearchAgent(2, 1000, 0.95)
+        # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
         while board.ifLast():
