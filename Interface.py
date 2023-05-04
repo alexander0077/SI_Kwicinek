@@ -1,3 +1,4 @@
+import time
 from tkinter import Tk
 from tkinter import ttk
 from Agenty.alphabetaagent import MinMaxABAgent
@@ -44,6 +45,7 @@ class Interface:
         self.bot2 = tk.StringVar(self.screen)
         self.bot2.set(self.__ZAIMPLEMENTOWANE_BOTY[0])
         self.bot2_value = 3 # wartosc bota 2: glebokosc/iteracje
+        self.isFreezed = False
         self.screen.title('4 w linii')
         self.screen.geometry(str(self.__SZEROKOSC_EKRANU) + "x" + str(self.__WYSOKOSC_EKRANU))
         self.screen.resizable(False, False)
@@ -84,13 +86,47 @@ class Interface:
         board_rows = 6
         board_cols = 7
         canvas_width = 400
-        canvas_height = 500
+        canvas_height = 400
         cell_size = 40
         cell_padding = 5
 
-        canvas = tk.Canvas(self.screen, width=canvas_width, height=canvas_height)
+        player_1_canvas = tk.Canvas(self.screen, width=(self.__SZEROKOSC_EKRANU - canvas_width) / 2,
+                                    height=canvas_height, highlightthickness=1)
+        player_1_canvas.configure(bg=self.__BACKGROUD_COLOR)
+        player_1_canvas.pack(side="left", padx=0, pady=0)
+
+        player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 70, text='PLAYER 1:', font=("Arial", 16))
+        player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150, text=self.bot1.get() + " wygrane:\n" + str(self.wygraneBot1),
+                                    font=("Arial", 16))
+
+        square_size = 30
+        player_1_canvas.create_rectangle(((self.__SZEROKOSC_EKRANU - canvas_width) / 4) - square_size,
+                                         (canvas_height / 2) - square_size + 40,
+                                         ((self.__SZEROKOSC_EKRANU - canvas_width) / 4) + square_size,
+                                         (canvas_height / 2) + square_size + 40,
+                                         fill='blue', outline='black')
+
+        canvas = tk.Canvas(self.screen, width=canvas_width, height=canvas_height,  highlightthickness=1)
         canvas.configure(bg=self.__BACKGROUD_COLOR)
-        canvas.pack()
+        canvas.pack(side="left")
+
+        player_2_canvas = tk.Canvas(self.screen, width=(self.__SZEROKOSC_EKRANU - canvas_width) / 2,
+                                    height=canvas_height, highlightthickness=1)
+        player_2_canvas.configure(bg=self.__BACKGROUD_COLOR)
+        player_2_canvas.pack(side="left", padx=0, pady=0)
+
+        player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 70, text='PLAYER 2:',
+                                    font=("Arial", 16))
+        player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150,
+                                    text=self.bot2.get() + " wygrane:\n" + str(self.wygraneBot2),
+                                    font=("Arial", 16))
+
+        square_size = 30
+        player_2_canvas.create_rectangle(((self.__SZEROKOSC_EKRANU - canvas_width) / 4) - square_size,
+                                         (canvas_height / 2) - square_size + 40,
+                                         ((self.__SZEROKOSC_EKRANU - canvas_width) / 4) + square_size,
+                                         (canvas_height / 2) + square_size + 40,
+                                         fill='red', outline='black')
 
         board_width = board_cols * (cell_size + cell_padding) - cell_padding
         board_height = board_rows * (cell_size + cell_padding) - cell_padding
@@ -120,7 +156,26 @@ class Interface:
         for i in range(board_cols):
             button = tk.Button(self.screen, text="  ", command=lambda i=i: self.move(i),
                                height=2, width=5)
-            button.place(x=x1 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 20)
+            button.place(x=x1 + 2 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 110)
+        def freezeGame(): #TODO TO JESZCZE NIE DZIALA, W SUMIE TO NIE WIEM CZEMU
+            if self.isFreezed:
+                self.isFreezed = False
+                resume_button.text = "Stop"
+            else:
+                self.isFreezed = True
+                resume_button.text = "Resume"
+
+        resume_button = tk.Button(self.screen, text="Stop", command=freezeGame,
+                           height=2, width=15)
+        h = self.__WYSOKOSC_EKRANU - (self.__WYSOKOSC_EKRANU - canvas_height) / 4 - 20
+        resume_button.place(x=self.__SZEROKOSC_EKRANU / 2 - 50, y=h)
+
+
+    def boardNotFull(self):
+        moves = self.game.possible_drops()
+        for _ in moves:
+            return True
+        return False
 
     def graBOT(self, v1, v2):  # TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
         if self.bot1.get() == "MinMax":
@@ -128,19 +183,19 @@ class Interface:
         elif self.bot1.get() == "AlphaBeta":
             self.instancjaBota1 = MinMaxABAgent(1, int(v1))
         elif self.bot1.get() == "MonteCarloTreeSearch":
-            # TODO dodac mozliwosc zmiany ostatniego parametru
             self.instancjaBota1 = MonteCarloTreeSearchAgent(1, int(v1), 0.95)
         if self.bot2.get() == "MinMax":
             self.instancjaBota2 = MinMaxAgent(2, int(v2))
         elif self.bot2.get() == "AlphaBeta":
             self.instancjaBota2 = MinMaxABAgent(2, int(v2))
         elif self.bot2.get() == "MonteCarloTreeSearch":
-            # TODO dodac mozliwosc zmiany ostatniego parametru
             self.instancjaBota2 = MonteCarloTreeSearchAgent(2, int(v2), 0.95)
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
-        while self.game.wining_player == -1 and board.ifLast():
+        last_winner = "Remis"
+        # TODO: TU SIE COS PSUJE Z WARUNKIEM KONCZENIE GDY JEST PELNA PLANSZA
+        while self.game.wining_player == -1 and self.boardNotFull:
             self.clear_window()
             self.printBoard()
             self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
@@ -153,16 +208,28 @@ class Interface:
             self.printBoard()
             if self.game.wining_player == 1:
                 self.wygraneBot1 += 1
+                last_winner = "Wygrywa " + self.bot1.get() + " " + v1
             elif self.game.wining_player == 2:
+                last_winner = "Wygrywa " + self.bot2.get() + " " + v2
                 self.wygraneBot2 += 1
             elif self.game.wining_player == 0:
                 self.wygraneBot1 += 0.5
                 self.wygraneBot2 += 0.5
             self.screen.update_idletasks()
             self.screen.update()
+
+
         print("")
-        print(self.bot1.get() + " wygrane: " + str(self.wygraneBot1))
-        print(self.bot2.get() + " wygrane: " + str(self.wygraneBot2))
+        # TODO: TU TRZEBA ZROBIC TAK ZEBY PRINTOWALO SIE NA EKRANIE, najlepiej na gorze
+        print(last_winner)
+
+        winner_label = tk.Label(self.screen, text=last_winner, font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
+        winner_label.place()
+
+
+        time.sleep(1)
+        print(self.bot1.get() + " " + v1 + " wygrane: " + str(self.wygraneBot1))
+        print(self.bot2.get() + " " + v2 + " wygrane: " + str(self.wygraneBot2))
         self.game = Game()
         self.graBOT(v1, v2)
 
