@@ -8,6 +8,7 @@ import tkinter as tk
 from Game import Game
 from Agenty.minmaxagent import MinMaxAgent
 
+
 class Interface:
     __ZAIMPLEMENTOWANE_BOTY = [
         "MinMax",
@@ -41,15 +42,17 @@ class Interface:
         self.screen = Tk()
         self.bot1 = tk.StringVar(self.screen)
         self.bot1.set(self.__ZAIMPLEMENTOWANE_BOTY[0])
-        self.bot1_value = 3 # wartosc bota 1: glebokosc/iteracje
+        self.bot1_value = 3  # wartosc bota 1: glebokosc/iteracje
         self.bot2 = tk.StringVar(self.screen)
         self.bot2.set(self.__ZAIMPLEMENTOWANE_BOTY[0])
-        self.bot2_value = 3 # wartosc bota 2: glebokosc/iteracje
-        self.isFreezed = False
+        self.bot2_value = 3  # wartosc bota 2: glebokosc/iteracje
         self.screen.title('4 w linii')
         self.screen.geometry(str(self.__SZEROKOSC_EKRANU) + "x" + str(self.__WYSOKOSC_EKRANU))
         self.screen.resizable(False, False)
+        self.lastWinTime = 0
+        self.last_winner = "Remis"
         self.mainMenu()
+
 
     def mainMenu(self):  # GLOWNY INTERFACE Z WYBOREM TRYBU I WYJSCIEM
         for widgets in self.screen.winfo_children():
@@ -90,14 +93,32 @@ class Interface:
         cell_size = 40
         cell_padding = 5
 
+        label = tk.Label(self.screen, text="", font=("Arial", 25), bg=self.__BACKGROUD_COLOR)
+
+        if self.lastWinTime + 1 > time.time():
+            label = tk.Label(self.screen, text=self.last_winner, font=("Arial", 25), bg=self.__BACKGROUD_COLOR)
+
+        label.pack()
+
+
         player_1_canvas = tk.Canvas(self.screen, width=(self.__SZEROKOSC_EKRANU - canvas_width) / 2,
-                                    height=canvas_height, highlightthickness=1)
+                                    height=canvas_height, highlightthickness=0)
         player_1_canvas.configure(bg=self.__BACKGROUD_COLOR)
         player_1_canvas.pack(side="left", padx=0, pady=0)
 
-        player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 70, text='PLAYER 1:', font=("Arial", 16))
-        player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150, text=self.bot1.get() + " wygrane:\n" + str(self.wygraneBot1),
+        player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 70, text='PLAYER 1:',
                                     font=("Arial", 16))
+        player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150,
+                                    text=self.instancjaBota1.toString() + "\n",
+                                    font=("Arial", 16))
+
+        player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 160,
+                                    text="wygrane:",
+                                    font=("Arial", 16))
+
+        player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 185,
+                                    text=str(self.wygraneBot1),
+                                    font=("Arial", 20))
 
         square_size = 30
         player_1_canvas.create_rectangle(((self.__SZEROKOSC_EKRANU - canvas_width) / 4) - square_size,
@@ -106,20 +127,29 @@ class Interface:
                                          (canvas_height / 2) + square_size + 40,
                                          fill='blue', outline='black')
 
-        canvas = tk.Canvas(self.screen, width=canvas_width, height=canvas_height,  highlightthickness=1)
+        canvas = tk.Canvas(self.screen, width=canvas_width, height=canvas_height, highlightthickness=0)
         canvas.configure(bg=self.__BACKGROUD_COLOR)
         canvas.pack(side="left")
 
         player_2_canvas = tk.Canvas(self.screen, width=(self.__SZEROKOSC_EKRANU - canvas_width) / 2,
-                                    height=canvas_height, highlightthickness=1)
+                                    height=canvas_height, highlightthickness=0)
         player_2_canvas.configure(bg=self.__BACKGROUD_COLOR)
         player_2_canvas.pack(side="left", padx=0, pady=0)
 
         player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 70, text='PLAYER 2:',
                                     font=("Arial", 16))
+
         player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150,
-                                    text=self.bot2.get() + " wygrane:\n" + str(self.wygraneBot2),
+                                    text=self.instancjaBota2.toString() + "\n",
                                     font=("Arial", 16))
+
+        player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 160,
+                                    text="wygrane:",
+                                    font=("Arial", 16))
+
+        player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 185,
+                                    text=str(self.wygraneBot2),
+                                    font=("Arial", 20))
 
         square_size = 30
         player_2_canvas.create_rectangle(((self.__SZEROKOSC_EKRANU - canvas_width) / 4) - square_size,
@@ -156,26 +186,23 @@ class Interface:
         for i in range(board_cols):
             button = tk.Button(self.screen, text="  ", command=lambda i=i: self.move(i),
                                height=2, width=5)
-            button.place(x=x1 + 2 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 110)
-        def freezeGame(): #TODO TO JESZCZE NIE DZIALA, W SUMIE TO NIE WIEM CZEMU
-            if self.isFreezed:
-                self.isFreezed = False
-                resume_button.text = "Stop"
-            else:
-                self.isFreezed = True
-                resume_button.text = "Resume"
+            button.place(x=x1 + 2 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 130)
 
-        resume_button = tk.Button(self.screen, text="Stop", command=freezeGame,
-                           height=2, width=15)
-        h = self.__WYSOKOSC_EKRANU - (self.__WYSOKOSC_EKRANU - canvas_height) / 4 - 20
-        resume_button.place(x=self.__SZEROKOSC_EKRANU / 2 - 50, y=h)
+
+
+        h = self.__WYSOKOSC_EKRANU - (self.__WYSOKOSC_EKRANU - canvas_height) / 4 - 10
+
+        return_button = tk.Button(self.screen, text="Powrót", fg="black", command=lambda: self.mainMenu(),
+                                  height=2, width=15)
+        return_button.place(x=self.__SZEROKOSC_EKRANU / 2 - 50, y=h)
 
 
     def boardNotFull(self):
         moves = self.game.possible_drops()
-        for _ in moves:
-            return True
-        return False
+
+        if not moves:
+            return False
+        return True
 
     def graBOT(self, v1, v2):  # TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
         if self.bot1.get() == "MinMax":
@@ -193,9 +220,9 @@ class Interface:
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
-        last_winner = "Remis"
-        # TODO: TU SIE COS PSUJE Z WARUNKIEM KONCZENIE GDY JEST PELNA PLANSZA
-        while self.game.wining_player == -1 and self.boardNotFull:
+        if not self.boardNotFull():
+            self.last_winner = "Remis"
+        while self.game.wining_player == -1 and self.boardNotFull():
             self.clear_window()
             self.printBoard()
             self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
@@ -208,9 +235,9 @@ class Interface:
             self.printBoard()
             if self.game.wining_player == 1:
                 self.wygraneBot1 += 1
-                last_winner = "Wygrywa " + self.bot1.get() + " " + v1
+                self.last_winner = "Wygrywa: " + self.instancjaBota1.toString()
             elif self.game.wining_player == 2:
-                last_winner = "Wygrywa " + self.bot2.get() + " " + v2
+                self.last_winner = "Wygrywa: " + self.instancjaBota2.toString()
                 self.wygraneBot2 += 1
             elif self.game.wining_player == 0:
                 self.wygraneBot1 += 0.5
@@ -218,28 +245,25 @@ class Interface:
             self.screen.update_idletasks()
             self.screen.update()
 
-
         print("")
-        # TODO: TU TRZEBA ZROBIC TAK ZEBY PRINTOWALO SIE NA EKRANIE, najlepiej na gorze
-        print(last_winner)
+        print(self.last_winner)
 
-        winner_label = tk.Label(self.screen, text=last_winner, font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
-        winner_label.place()
+        self.lastWinTime = time.time()
+        self.printBoard()
 
 
-        time.sleep(1)
-        print(self.bot1.get() + " " + v1 + " wygrane: " + str(self.wygraneBot1))
-        print(self.bot2.get() + " " + v2 + " wygrane: " + str(self.wygraneBot2))
+        print(self.instancjaBota1.toString() + " wygrane: " + str(self.wygraneBot1))
+        print(self.instancjaBota2.toString() + " wygrane: " + str(self.wygraneBot2))
         self.game = Game()
         self.graBOT(v1, v2)
-
 
     def graBotInterface(self):
         self.clear_window()
         self.screen.configure(bg=self.__BACKGROUD_COLOR)
 
         # canvas do wyboru botow
-        self.bot_choose_canvas = tk.Canvas(self.screen, width=300, height=200, bg=self.__BACKGROUD_COLOR, highlightthickness=0)
+        self.bot_choose_canvas = tk.Canvas(self.screen, width=300, height=200, bg=self.__BACKGROUD_COLOR,
+                                           highlightthickness=0)
         self.bot_choose_canvas.pack(side="top", anchor="center", pady=50)
 
         def changeTagsBot1(screen):
@@ -256,14 +280,14 @@ class Interface:
             if self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
                 label_bot_2_tag.config(text="   Ilość iteracji: ")
 
-
         # Wybor bota 1
         label1 = tk.Label(self.bot_choose_canvas, text="BOT 1: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
         label1.grid(row=0, column=0)
-        bot_menu1 = tk.OptionMenu(self.bot_choose_canvas, self.bot1, *self.__ZAIMPLEMENTOWANE_BOTY, command=changeTagsBot1)
+        bot_menu1 = tk.OptionMenu(self.bot_choose_canvas, self.bot1, *self.__ZAIMPLEMENTOWANE_BOTY,
+                                  command=changeTagsBot1)
         bot_menu1.grid(row=0, column=1)
         label_bot_1_tag = tk.Label(self.bot_choose_canvas, text="   Głębkość ", font=("Arial", 12),
-                                     bg=self.__BACKGROUD_COLOR)
+                                   bg=self.__BACKGROUD_COLOR)
         label_bot_1_tag.grid(row=0, column=2)
         self.bot1_value = tk.Entry(self.bot_choose_canvas)
         self.bot1_value.grid(row=0, column=3)
@@ -271,25 +295,25 @@ class Interface:
         # Wybor bot 2
         label2 = tk.Label(self.bot_choose_canvas, text="BOT 2: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
         label2.grid(row=1, column=0)
-        bot_menu2 = tk.OptionMenu(self.bot_choose_canvas, self.bot2, *self.__ZAIMPLEMENTOWANE_BOTY, command=changeTagsBot2)
+        bot_menu2 = tk.OptionMenu(self.bot_choose_canvas, self.bot2, *self.__ZAIMPLEMENTOWANE_BOTY,
+                                  command=changeTagsBot2)
         bot_menu2.grid(row=1, column=1)
         label_bot_2_tag = tk.Label(self.bot_choose_canvas, text="   Głębkość ", font=("Arial", 12),
-                                     bg=self.__BACKGROUD_COLOR)
+                                   bg=self.__BACKGROUD_COLOR)
         label_bot_2_tag.grid(row=1, column=2)
         self.bot2_value = tk.Entry(self.bot_choose_canvas)
         self.bot2_value.grid(row=1, column=3)
 
-        start_button = tk.Button(self.screen, text="Rozpocznij gre", fg="black", command=lambda: self.graBOT(self.bot1_value.get(), self.bot2_value.get()),
-                               height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
-                               bg=self.__BUTTONS_COLOR)
+        start_button = tk.Button(self.screen, text="Rozpocznij gre", fg="black",
+                                 command=lambda: self.graBOT(self.bot1_value.get(), self.bot2_value.get()),
+                                 height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
+                                 bg=self.__BUTTONS_COLOR)
         start_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=225)
 
         return_button = tk.Button(self.screen, text="Powrót", fg="black", command=lambda: self.mainMenu(),
-                               height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
-                               bg=self.__BUTTONS_COLOR)
+                                  height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
+                                  bg=self.__BUTTONS_COLOR)
         return_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=400)
-
-
 
     def move(self, i):
         if self.game.current_Player == 2:
@@ -324,7 +348,6 @@ class Interface:
             if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
                 label_bot_1_tag.config(text="   Ilość iteracji: ")
 
-
         # Wybor bota 1
         label1 = tk.Label(self.bot_choose_canvas, text="BOT 1: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
         label1.grid(row=0, column=0)
@@ -336,7 +359,6 @@ class Interface:
         label_bot_1_tag.grid(row=0, column=2)
         self.bot1_value = tk.Entry(self.bot_choose_canvas)
         self.bot1_value.grid(row=0, column=3)
-
 
         start_button = tk.Button(self.screen, text="Rozpocznij gre", fg="black",
                                  command=lambda: self.gra1v1(self.bot1_value.get()),
