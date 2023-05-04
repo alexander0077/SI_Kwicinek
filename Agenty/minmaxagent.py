@@ -11,6 +11,9 @@ class MinMaxAgent:
             self.pNum = 1
         self.initial_depth = initial_depth
 
+
+    def toString(self):
+        return "Minmax [głębokość " + str(self.initial_depth) + "]"
     def decide(self, connect4):
         pos_drops = connect4.possible_drops()
         if not pos_drops:
