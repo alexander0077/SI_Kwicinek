@@ -65,7 +65,7 @@ class Interface:
                                bg=self.__BUTTONS_COLOR)
         button_BOT.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=125)
 
-        button_1v1 = tk.Button(self.screen, text="Gra przeciwko SI", fg="black", command=lambda: self.gra1v1(),
+        button_1v1 = tk.Button(self.screen, text="Gra przeciwko SI", fg="black", command=lambda: self.gra1v1Interface(),
                                height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
                                bg=self.__BUTTONS_COLOR)
         button_1v1.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=225)
@@ -241,16 +241,57 @@ class Interface:
         self.clear_window()
         self.printBoard()
 
-    def gra1v1(self):
+    def gra1v1Interface(self):
+        self.clear_window()
+        self.screen.configure(bg=self.__BACKGROUD_COLOR)
+
+        # canvas do wyboru botow
+        self.bot_choose_canvas = tk.Canvas(self.screen, width=300, height=200, bg=self.__BACKGROUD_COLOR,
+                                           highlightthickness=0)
+        self.bot_choose_canvas.pack(side="top", anchor="center", pady=50)
+
+        def changeTagsBot1(screen):
+            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot1 == self.__ZAIMPLEMENTOWANE_BOTY[1]:
+                label_bot_1_tag.config(text="   Głębkość ")
+
+            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
+                label_bot_1_tag.config(text="   Ilość iteracji: ")
+
+
+        # Wybor bota 1
+        label1 = tk.Label(self.bot_choose_canvas, text="BOT 1: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
+        label1.grid(row=0, column=0)
+        bot_menu1 = tk.OptionMenu(self.bot_choose_canvas, self.bot1, *self.__ZAIMPLEMENTOWANE_BOTY,
+                                  command=changeTagsBot1)
+        bot_menu1.grid(row=0, column=1)
+        label_bot_1_tag = tk.Label(self.bot_choose_canvas, text="   Głębkość ", font=("Arial", 12),
+                                   bg=self.__BACKGROUD_COLOR)
+        label_bot_1_tag.grid(row=0, column=2)
+        self.bot1_value = tk.Entry(self.bot_choose_canvas)
+        self.bot1_value.grid(row=0, column=3)
+
+
+        start_button = tk.Button(self.screen, text="Rozpocznij gre", fg="black",
+                                 command=lambda: self.gra1v1(self.bot1_value.get()),
+                                 height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
+                                 bg=self.__BUTTONS_COLOR)
+        start_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=225)
+
+        return_button = tk.Button(self.screen, text="Powrót", fg="black", command=lambda: self.mainMenu(),
+                                  height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
+                                  bg=self.__BUTTONS_COLOR)
+        return_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=400)
+
+    def gra1v1(self, v1):
         if self.bot1.get() == "MinMax":
             # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
-            self.instancjaBota1 = MinMaxAgent(2, 4)
+            self.instancjaBota1 = MinMaxAgent(2, v1)
         elif self.bot1.get() == "AlphaBeta":
             # TODO tak jak wyzej, dodac opcje wyboru glebi
-            self.instancjaBota1 = MinMaxABAgent(2, 6)
+            self.instancjaBota1 = MinMaxABAgent(2, v1)
         elif self.bot1.get() == "MonteCarloTreeSearch":
             # TODO tj wyżej ale ilosc iteracji i constant(?)
-            self.instancjaBota1 = MonteCarloTreeSearchAgent(2, 1000, 0.95)
+            self.instancjaBota1 = MonteCarloTreeSearchAgent(2, v1, 0.95)
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
