@@ -1,3 +1,6 @@
+import copy
+
+
 class Game:
     __szerokosc = 0
     __wysokosc = 0
@@ -60,6 +63,26 @@ class Game:
                 yield [self.__gameArr[n_row+i][n_column+i] for i in range(4)]  # decreasing
                 yield [self.__gameArr[n_row+i][self.__szerokosc-1-n_column-i] for i in range(4)]  # increasing
 
+    def iter_sequences(self, length): #przyjmuje parametr
+        # Horizontal
+        for row in range(self.__wysokosc):
+            for col in range(self.__szerokosc - length + 1):
+                yield [self.__gameArr[row][col + i] for i in range(length)]
+
+        # Vertical
+        for row in range(self.__wysokosc - length + 1):
+            for col in range(self.__szerokosc):
+                yield [self.__gameArr[row + i][col] for i in range(length)]
+
+        # Diagonal /
+        for row in range(length - 1, self.__wysokosc):
+            for col in range(self.__szerokosc - length + 1):
+                yield [self.__gameArr[row - i][col + i] for i in range(length)]
+
+        # Diagonal \
+        for row in range(self.__wysokosc - length + 1):
+            for col in range(self.__szerokosc - length + 1):
+                yield [self.__gameArr[row + i][col + i] for i in range(length)]
     def sprawdzWygrana(self, gracz):
         # check horizontal loc
         for c in range(self.__szerokosc - 3):
@@ -91,3 +114,12 @@ class Game:
 
     def getArr(self):
         return self.__gameArr
+
+    def reset(self):
+        self.__gameArr = [([0] * self.__szerokosc) for _ in range(self.__wysokosc)]
+
+    def set_board_state(self, state):
+        if len(state) == self.__wysokosc and all(len(row) == self.__szerokosc for row in state):
+            self.__gameArr = copy.deepcopy(state)
+        else:
+            raise ValueError("Nieprawidłowy stan planszy")

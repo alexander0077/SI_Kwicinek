@@ -1,8 +1,11 @@
 import time
 from tkinter import Tk
 from tkinter import ttk
+
+from Agenty.Train import GameLoop
 from Agenty.alphabetaagent import MinMaxABAgent
 from Agenty.montecarloagent import MonteCarloTreeSearchAgent
+from Agenty.regresjaagent import RegresjaAgent
 from Board import Board
 import tkinter as tk
 from Game import Game
@@ -13,7 +16,8 @@ class Interface:
     __ZAIMPLEMENTOWANE_BOTY = [
         "MinMax",
         "AlphaBeta",
-        "MonteCarloTreeSearch"
+        "MonteCarloTreeSearch",
+        "Regresja"
     ]
     __SZEROKOSC_EKRANU = 900
     __WYSOKOSC_EKRANU = 600
@@ -51,6 +55,7 @@ class Interface:
         self.screen.resizable(False, False)
         self.lastWinTime = 0
         self.last_winner = "Remis"
+        self.potrzebny_trening = True
         self.mainMenu()
 
 
@@ -212,12 +217,29 @@ class Interface:
             self.instancjaBota1 = MinMaxABAgent(1, int(v1))
         elif self.bot1.get() == "MonteCarloTreeSearch":
             self.instancjaBota1 = MonteCarloTreeSearchAgent(1, int(v1), 0.95)
+        elif self.bot1.get() == "Regresja":
+            #self.instancjaBota1 = RegresjaAgent(1, int(v1))
+            if self.potrzebny_trening:
+                gameTraining = Game(7, 6)
+                minmax_agent1 = MinMaxABAgent(1, 3)
+                minmax_agent2 = MinMaxABAgent(2, 3)
+
+                game_loop = GameLoop(minmax_agent1, minmax_agent2, gameTraining)
+                self.training_data = game_loop.generate_training_data(num_games=100)
+                self.potrzebny_trening = False
+
+            # Trenowanie LinearRegressionAgent na danych treningowych
+            self.instancjaBota1 = RegresjaAgent(my_token=1)
+            self.instancjaBota1.train(self.training_data)
+
         if self.bot2.get() == "MinMax":
             self.instancjaBota2 = MinMaxAgent(2, int(v2))
         elif self.bot2.get() == "AlphaBeta":
             self.instancjaBota2 = MinMaxABAgent(2, int(v2))
         elif self.bot2.get() == "MonteCarloTreeSearch":
             self.instancjaBota2 = MonteCarloTreeSearchAgent(2, int(v2), 0.95)
+        #elif self.bot1.get() == "Regresja":
+            #self.instancjaBota2 = RegresjaAgent(2, int(v2))
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
@@ -380,6 +402,8 @@ class Interface:
             self.instancjaBota1 = MinMaxABAgent(2, v1)
         elif self.bot1.get() == "MonteCarloTreeSearch":
             self.instancjaBota1 = MonteCarloTreeSearchAgent(2, v1, 0.95)
+        #elif self.bot1.get() == "Regresja":
+        #    self.instancjaBota1 = RegresjaAgent(2, int(v1))
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
