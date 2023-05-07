@@ -22,7 +22,7 @@ class MonteCarloTreeSearchAgent:
             self.pNum = -1
         else:
             self.pNum = 1
-        self.initial_iterations = initial_iterations
+        self.initial_iterations = int(initial_iterations)
         self.tradeOffConstant = tradeOffConstant
 
     def toString(self):

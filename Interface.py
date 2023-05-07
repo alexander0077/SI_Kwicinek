@@ -139,7 +139,8 @@ class Interface:
         player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 70, text='PLAYER 2:',
                                     font=("Arial", 16))
 
-        player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150,
+        if self.instancjaBota2 is not None:
+            player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150,
                                     text=self.instancjaBota2.toString() + "\n",
                                     font=("Arial", 16))
 
@@ -372,14 +373,12 @@ class Interface:
         return_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=400)
 
     def gra1v1(self, v1):
+        # TODO DODAC MOZLIWOSC WYBORU STRONY DLA GRACZA
         if self.bot1.get() == "MinMax":
-            # TODO Dodac opcje wyboru glebi dzialania minmaxa, teraz jest hardcoded na 4
             self.instancjaBota1 = MinMaxAgent(2, v1)
         elif self.bot1.get() == "AlphaBeta":
-            # TODO tak jak wyzej, dodac opcje wyboru glebi
             self.instancjaBota1 = MinMaxABAgent(2, v1)
         elif self.bot1.get() == "MonteCarloTreeSearch":
-            # TODO tj wyżej ale ilosc iteracji i constant(?)
             self.instancjaBota1 = MonteCarloTreeSearchAgent(2, v1, 0.95)
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
