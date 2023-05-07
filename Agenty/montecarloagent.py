@@ -26,7 +26,7 @@ class MonteCarloTreeSearchAgent:
         self.tradeOffConstant = tradeOffConstant
 
     def toString(self):
-        return "Monte Carlo search tree\n[" + str(self.initial_iterations) + " iteracji]"
+        return "MCTS\n[" + str(self.initial_iterations) + " iteracji]"
     def decide(self, board):
         root = MonteCarloGameState(self.pNum, board)
         for i in range(self.initial_iterations):
