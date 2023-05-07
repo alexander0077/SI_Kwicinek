@@ -9,7 +9,7 @@ class MinMaxAgent:
             self.pNum = -1
         else:
             self.pNum = 1
-        self.initial_depth = initial_depth
+        self.initial_depth = int(initial_depth)
 
 
     def toString(self):
@@ -72,5 +72,5 @@ class MinMaxAgent:
             for board in pos_drops:
                 tmp2 = copy.deepcopy(connect4)
                 tmp2.dodajKrazek(board)
-                value = min(value, self.minmax(tmp2, maximizingPlayer * -1, glebia - 1))
+                value = min(value, self.minmax(tmp2, maximizingPlayer * (-1), glebia - 1))
             return value
