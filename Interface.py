@@ -6,6 +6,7 @@ from Agenty.Train import GameLoop
 from Agenty.alphabetaagent import MinMaxABAgent
 from Agenty.montecarloagent import MonteCarloTreeSearchAgent
 from Agenty.regresjaagent import RegresjaAgent
+from Agenty.randomagent import RandomAgent
 from Board import Board
 import tkinter as tk
 from Game import Game
@@ -17,7 +18,8 @@ class Interface:
         "MinMax",
         "AlphaBeta",
         "MonteCarloTreeSearch",
-        "Regresja"
+        "Regresja",
+        "Random"
     ]
     __SZEROKOSC_EKRANU = 900
     __WYSOKOSC_EKRANU = 600
@@ -215,6 +217,8 @@ class Interface:
             self.instancjaBota1 = MinMaxAgent(1, int(v1))
         elif self.bot1.get() == "AlphaBeta":
             self.instancjaBota1 = MinMaxABAgent(1, int(v1))
+        elif self.bot1.get() == "Random":
+            self.instancjaBota1 = RandomAgent(1)
         elif self.bot1.get() == "MonteCarloTreeSearch":
             self.instancjaBota1 = MonteCarloTreeSearchAgent(1, int(v1), 0.95)
         elif self.bot1.get() == "Regresja":
@@ -236,6 +240,8 @@ class Interface:
             self.instancjaBota2 = MinMaxAgent(2, int(v2))
         elif self.bot2.get() == "AlphaBeta":
             self.instancjaBota2 = MinMaxABAgent(2, int(v2))
+        elif self.bot2.get() == "Random":
+            self.instancjaBota2 = RandomAgent(1)
         elif self.bot2.get() == "MonteCarloTreeSearch":
             self.instancjaBota2 = MonteCarloTreeSearchAgent(2, int(v2), 0.95)
         #elif self.bot1.get() == "Regresja":
@@ -400,6 +406,8 @@ class Interface:
             self.instancjaBota1 = MinMaxAgent(2, v1)
         elif self.bot1.get() == "AlphaBeta":
             self.instancjaBota1 = MinMaxABAgent(2, v1)
+        elif self.bot1.get() == "Random":
+            self.instancjaBota1 = RandomAgent(2)
         elif self.bot1.get() == "MonteCarloTreeSearch":
             self.instancjaBota1 = MonteCarloTreeSearchAgent(2, v1, 0.95)
         #elif self.bot1.get() == "Regresja":
