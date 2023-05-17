@@ -5,6 +5,9 @@ import random
 
 def check_if_done(observation): # GIT
     done = [False, 'No Winner Yet']
+
+    if 0 not in observation[0]:
+        done = [True, 'Draw']
     # horizontal check
     for i in range(6):
         for j in range(4):
@@ -39,6 +42,51 @@ def check_if_done(observation): # GIT
                     observation[row - 3][col + 3] == 2:
                 done = [True, 'Player 2 Wins Diagonal']
     return done
+
+
+def testing(model, ile_treningu): # funkcja wykonujaca test dla 100 gierek na random agencie i zapisujaca wyniki do pliku
+    wygrane = 0
+    remisy = 0
+    przegrane = 0
+    for game_iterator in range(400):
+        connect4_board = np.zeros((6, 7))
+        done = [False, 'No Winner Yet']
+        while done[0] == False:
+            action = get_action(model, connect4_board, 1) # 1 to epsilon, nie zmieniac do testowania
+            if connect4_board[0][action[0]] != 0: # jezeli agent wybral zly ruch to przegrywa
+                przegrane += 1
+                break
+            connect4_board = make_move(connect4_board, action[0], 1)
+            done = check_if_done(connect4_board)
+            if done[0] == True:
+                if 'Player 2' in done[1]:
+                    przegrane += 1
+                elif 'Player 1' in done[1]:
+                    wygrane += 1
+                elif 'Remis' in done[1]:
+                    remisy += 1
+                break
+            random_move = returnRandomPossibleMove(connect4_board)
+            connect4_board = make_move(connect4_board, random_move, 2)
+            done = check_if_done(connect4_board)
+            if done[0] == True:
+                if 'Player 2' in done[1]:
+                    przegrane += 1
+                elif 'Player 1' in done[1]:
+                    wygrane += 1
+                elif 'Remis' in done[1]:
+                    remisy += 1
+                break
+    raw_results = str(ile_treningu) + " " + str(wygrane) + " " + str(remisy) + " " + str(przegrane) + "\n"
+    result_string = "Rezultat testu po " + str(ile_treningu) + " testach:\n"
+    result_string += "Wygrane: " + str(wygrane) + " Remisy: " + str(remisy) + " Przegrane: " + str(przegrane) + "\n"
+    print(result_string)
+    with open("tests_results/random_agent_results", 'a') as plik:
+        plik.write(result_string)
+    with open("tests_results/raw_results", 'a') as plik:
+        plik.write(raw_results)
+
+
 
 # Definicja architektury sieci
 def create_model():
@@ -199,13 +247,25 @@ for i_episode in range(40000):
             done[0] = True
         # -----Customize Rewards Here------
 
-        #memory.add_to_memory(connect4_board, action, reward)
-        memory.add_to_memory(np.array(board_before_move).reshape(6, 7), action, reward)
-
-        # TODO zmienic wykonywanie ruchu przez bota tak, aby model nie podejmowal ruchu po porazce
         if done[0] == False:
             random_move = returnRandomPossibleMove(connect4_board)
             connect4_board = make_move(connect4_board, random_move, 2)
+            done = check_if_done(connect4_board)
+
+            if done[0] == True:
+                if 'Vertical' in done[1]:
+                    reward = 5
+                elif 'Horizontal' in done[1]:
+                    reward = 15
+                elif 'Diagonal' in done[1]:
+                    reward = 20
+
+                if 'Player 2' in done[1]:
+                    reward = -1 * abs(reward)
+                elif 'Player 1' in done[1]:
+                    win_count += 1
+
+        memory.add_to_memory(np.array(board_before_move).reshape(6, 7), action, reward)
 
         if done[0]:
             # train after each game
@@ -214,4 +274,11 @@ for i_episode in range(40000):
                        actions=np.array(memory.actions),
                        rewards=memory.rewards)
 
+            if i_episode % 1000 == 0 and i_episode != 0:
+                testing(neutral_model, i_episode)
+
+            if i_episode % 100 == 0:
+                neutral_model.save('models/reinforced_model_v3.h5')
+                # "reinforced_model" TO MODEL PO 3K TRENINGU NA RANDOM AGENT
+                # "reinforced_model_v2" TO MODEL PO 6K-7k TRENINGU NA RANDOM AGENT
             break
