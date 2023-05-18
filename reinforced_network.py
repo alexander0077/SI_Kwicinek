@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import random
+import os
 
 
 def check_if_done(observation): # GIT
@@ -48,13 +49,18 @@ def testing(model, ile_treningu): # funkcja wykonujaca test dla 100 gierek na ra
     wygrane = 0
     remisy = 0
     przegrane = 0
+    invalids = 0
+    v = 0
+    h = 0
+    d = 0
     for game_iterator in range(400):
         connect4_board = np.zeros((6, 7))
         done = [False, 'No Winner Yet']
         while done[0] == False:
-            action = get_action(model, connect4_board, 1) # 1 to epsilon, nie zmieniac do testowania
+            action = get_action(model, connect4_board, 0) # 0 to epsilon, nie zmieniac do testowania
             if connect4_board[0][action[0]] != 0: # jezeli agent wybral zly ruch to przegrywa
                 przegrane += 1
+                invalids += 1
                 break
             connect4_board = make_move(connect4_board, action[0], 1)
             done = check_if_done(connect4_board)
@@ -63,7 +69,13 @@ def testing(model, ile_treningu): # funkcja wykonujaca test dla 100 gierek na ra
                     przegrane += 1
                 elif 'Player 1' in done[1]:
                     wygrane += 1
-                elif 'Remis' in done[1]:
+                    if 'Horizontal' in done[1]:
+                        h += 1
+                    elif 'Vertical' in done[1]:
+                        v += 1
+                    elif 'Diagonal' in done[1]:
+                        d += 1
+                elif 'Draw' in done[1]:
                     remisy += 1
                 break
             random_move = returnRandomPossibleMove(connect4_board)
@@ -77,13 +89,16 @@ def testing(model, ile_treningu): # funkcja wykonujaca test dla 100 gierek na ra
                 elif 'Remis' in done[1]:
                     remisy += 1
                 break
-    raw_results = str(ile_treningu) + " " + str(wygrane) + " " + str(remisy) + " " + str(przegrane) + "\n"
-    result_string = "Rezultat testu po " + str(ile_treningu) + " testach:\n"
+    raw_results = str(ile_treningu) + " " + str(wygrane) + " " + str(remisy) + " " + str(przegrane) + " "
+    raw_results += str(invalids) + " " + str(v) + " " + str(h) + " " + str(d) + "\n"
+    result_string = "Rezultat testu po " + str(ile_treningu) + " treningach:\n"
     result_string += "Wygrane: " + str(wygrane) + " Remisy: " + str(remisy) + " Przegrane: " + str(przegrane) + "\n"
+    result_string += "Bledne ruchy: " + str(invalids) + " Pionowe: " + str(v) + " Poziome: " + str(h) + " Przekatne: " + str(d) + "\n\n"
+
     print(result_string)
-    with open("tests_results/random_agent_results", 'a') as plik:
+    with open("C:/Users/a9sar/Desktop/SI_Kwicinek/tests_results/random_agent_results", 'a') as plik:
         plik.write(result_string)
-    with open("tests_results/raw_results", 'a') as plik:
+    with open("C:/Users/a9sar/Desktop/SI_Kwicinek/tests_results/raw_results", 'a') as plik:
         plik.write(raw_results)
 
 
@@ -204,7 +219,7 @@ class Memory:
 # train player 1 against random agent
 tf.keras.backend.set_floatx('float64')
 # LEARNING RATE
-optimizer = tf.keras.optimizers.Adam(0.0001)
+optimizer = tf.keras.optimizers.Adam(0.00001)
 
 connect4_board = np.zeros((6, 7))
 memory = Memory()
@@ -233,9 +248,9 @@ for i_episode in range(40000):
             if 'Vertical' in done[1]:
                 reward = 5
             elif 'Horizontal' in done[1]:
-                reward = 15
+                reward = 40
             elif 'Diagonal' in done[1]:
-                reward = 20
+                reward = 60
 
             if 'Player 2' in done[1]:
                 reward = -1 * abs(reward)
@@ -243,7 +258,7 @@ for i_episode in range(40000):
                 win_count += 1
 
         if overflow == True and done[0] == False:
-            reward = -99
+            reward = -999
             done[0] = True
         # -----Customize Rewards Here------
 
@@ -256,9 +271,9 @@ for i_episode in range(40000):
                 if 'Vertical' in done[1]:
                     reward = 5
                 elif 'Horizontal' in done[1]:
-                    reward = 15
+                    reward = 40 # poprzednio 15
                 elif 'Diagonal' in done[1]:
-                    reward = 20
+                    reward = 60 # poprzednio 20
 
                 if 'Player 2' in done[1]:
                     reward = -1 * abs(reward)
@@ -274,11 +289,11 @@ for i_episode in range(40000):
                        actions=np.array(memory.actions),
                        rewards=memory.rewards)
 
-            if i_episode % 1000 == 0 and i_episode != 0:
+            if i_episode % 1000 == 0:
                 testing(neutral_model, i_episode)
 
             if i_episode % 100 == 0:
-                neutral_model.save('models/reinforced_model_v3.h5')
+                neutral_model.save('C:/Users/a9sar/Desktop/SI_Kwicinek/models/reinforced_model_v3.h5')
                 # "reinforced_model" TO MODEL PO 3K TRENINGU NA RANDOM AGENT
                 # "reinforced_model_v2" TO MODEL PO 6K-7k TRENINGU NA RANDOM AGENT
             break
