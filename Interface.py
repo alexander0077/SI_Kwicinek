@@ -7,6 +7,8 @@ from Agenty.alphabetaagent import MinMaxABAgent
 from Agenty.montecarloagent import MonteCarloTreeSearchAgent
 from Agenty.regresjaagent import RegresjaAgent
 from Agenty.randomagent import RandomAgent
+from Agenty.heuristicagent import StaticAgent
+from Agenty.networkagent import NetworkAgent
 from Board import Board
 import tkinter as tk
 from Game import Game
@@ -18,8 +20,9 @@ class Interface:
         "MinMax",
         "AlphaBeta",
         "MonteCarloTreeSearch",
-        "Regresja",
-        "Random"
+        "Random",
+        "Heurystyka statyczna",
+        "Siec neuronowa"
     ]
     __SZEROKOSC_EKRANU = 900
     __WYSOKOSC_EKRANU = 600
@@ -28,12 +31,6 @@ class Interface:
     __BACKGROUD_COLOR = '#adad9a'
     __BUTTONS_COLOR = '#d1c75a'
     __WYSOKOSC_PRZYCISKU = 4
-
-    __NONE = 99
-    __GORA = 101
-    __DOL = 102
-    __PRAWO = 103
-    __LEWO = 104
 
     instancjaBota1 = None
     instancjaBota2 = None
@@ -58,10 +55,26 @@ class Interface:
         self.lastWinTime = 0
         self.last_winner = "Remis"
         self.potrzebny_trening = True
+        self.turn = tk.StringVar(self.screen)
+        self.enemy_stat = 3
+
+        self.sumaCzasu1 = 0
+        self.sumaCzasu2 = 0
+        self.sumaRuchow1 = 0.0001
+        self.sumaRuchow2 = 0.0001
+
         self.mainMenu()
 
 
+
     def mainMenu(self):  # GLOWNY INTERFACE Z WYBOREM TRYBU I WYJSCIEM
+        self.game.reset()
+        self.sumaCzasu1 = 0
+        self.sumaCzasu2 = 0
+        self.sumaRuchow1 = 0.0001
+        self.sumaRuchow2 = 0.0001
+        self.instancjaBota2 = None
+        self.instancjaBota1 = None
         for widgets in self.screen.winfo_children():
             widgets.destroy()
         self.screen.configure(bg=self.__BACKGROUD_COLOR)
@@ -115,8 +128,12 @@ class Interface:
 
         player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 70, text='PLAYER 1:',
                                     font=("Arial", 16))
+        if self.instancjaBota1 is None:
+            name = "Gracz 1"
+        else:
+            name = self.instancjaBota1.toString()
         player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150,
-                                    text=self.instancjaBota1.toString() + "\n",
+                                    text=name + "\n",
                                     font=("Arial", 16))
 
         player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 160,
@@ -133,6 +150,16 @@ class Interface:
                                          ((self.__SZEROKOSC_EKRANU - canvas_width) / 4) + square_size,
                                          (canvas_height / 2) + square_size + 40,
                                          fill='blue', outline='black')
+        # ===================================TIMER=============================================
+        if self.instancjaBota1 is not None:
+            player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 305,
+                                        text="Średni czas ruchu:",
+                                        font=("Arial", 17))
+
+            player_1_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 355,
+                                        text=str(round((self.sumaCzasu1 / self.sumaRuchow1) * 100)/100) + "ms",
+                                        font=("Arial", 25))
+        # ===================================TIMER=============================================
 
         canvas = tk.Canvas(self.screen, width=canvas_width, height=canvas_height, highlightthickness=0)
         canvas.configure(bg=self.__BACKGROUD_COLOR)
@@ -146,9 +173,13 @@ class Interface:
         player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 70, text='PLAYER 2:',
                                     font=("Arial", 16))
 
-        if self.instancjaBota2 is not None:
-            player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150,
-                                    text=self.instancjaBota2.toString() + "\n",
+        if self.instancjaBota2 is None:
+            name_2 = "Gracz 2"
+        else:
+            name_2 = self.instancjaBota2.toString()
+
+        player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 150,
+                                    text=name_2 + "\n",
                                     font=("Arial", 16))
 
         player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 160,
@@ -165,6 +196,16 @@ class Interface:
                                          ((self.__SZEROKOSC_EKRANU - canvas_width) / 4) + square_size,
                                          (canvas_height / 2) + square_size + 40,
                                          fill='red', outline='black')
+#===================================TIMER=============================================
+        if self.instancjaBota2 is not None:
+            player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 305,
+                                        text="Średni czas ruchu:",
+                                        font=("Arial", 17))
+
+            player_2_canvas.create_text((self.__SZEROKOSC_EKRANU - canvas_width) / 4, 355,
+                                        text=str(round((self.sumaCzasu2 / self.sumaRuchow2) * 100)/100) + "ms",
+                                        font=("Arial", 25))
+# ===================================TIMER=============================================
 
         board_width = board_cols * (cell_size + cell_padding) - cell_padding
         board_height = board_rows * (cell_size + cell_padding) - cell_padding
@@ -221,45 +262,49 @@ class Interface:
             self.instancjaBota1 = RandomAgent(1)
         elif self.bot1.get() == "MonteCarloTreeSearch":
             self.instancjaBota1 = MonteCarloTreeSearchAgent(1, int(v1), 0.95)
-        elif self.bot1.get() == "Regresja":
-            #self.instancjaBota1 = RegresjaAgent(1, int(v1))
-            if self.potrzebny_trening:
-                gameTraining = Game(7, 6)
-                minmax_agent1 = MinMaxABAgent(1, 3)
-                minmax_agent2 = MinMaxABAgent(2, 3)
+        elif self.bot1.get() == "Heurystyka statyczna":
+            self.instancjaBota1 = StaticAgent(1)
+        elif self.bot1.get() == "Siec neuronowa":
+            self.instancjaBota1 = NetworkAgent(1)
 
-                game_loop = GameLoop(minmax_agent1, minmax_agent2, gameTraining)
-                self.training_data = game_loop.generate_training_data(num_games=100)
-                self.potrzebny_trening = False
-
-            # Trenowanie LinearRegressionAgent na danych treningowych
-            self.instancjaBota1 = RegresjaAgent(my_token=1)
-            self.instancjaBota1.train(self.training_data)
 
         if self.bot2.get() == "MinMax":
             self.instancjaBota2 = MinMaxAgent(2, int(v2))
         elif self.bot2.get() == "AlphaBeta":
             self.instancjaBota2 = MinMaxABAgent(2, int(v2))
         elif self.bot2.get() == "Random":
-            self.instancjaBota2 = RandomAgent(1)
+            self.instancjaBota2 = RandomAgent(2)
         elif self.bot2.get() == "MonteCarloTreeSearch":
             self.instancjaBota2 = MonteCarloTreeSearchAgent(2, int(v2), 0.95)
-        #elif self.bot1.get() == "Regresja":
-            #self.instancjaBota2 = RegresjaAgent(2, int(v2))
-        # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
-        board = Board()
+        elif self.bot2.get() == "Heurystyka statyczna":
+            self.instancjaBota2 = StaticAgent(2)
+        elif self.bot2.get() == "Siec neuronowa":
+            self.instancjaBota2 = NetworkAgent(2)
+
         self.clear_window()
         if not self.boardNotFull():
             self.last_winner = "Remis"
         while self.game.wining_player == -1 and self.boardNotFull():
             self.clear_window()
             self.printBoard()
+
+            t1 = time.time()
             self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
+            t2 = time.time()
+            self.sumaCzasu1 += round((t2 - t1) * 100000)/100
+            self.sumaRuchow1 += 1
+
             self.clear_window()
             self.printBoard()
             self.screen.update_idletasks()
             self.screen.update()
+
+            t1 = time.time()
             self.game.dodajKrazek(self.instancjaBota2.decide(self.game))
+            t2 = time.time()
+            self.sumaCzasu2 += round((t2 - t1) * 100000)/100
+            self.sumaRuchow2 += 1
+
             self.clear_window()
             self.printBoard()
             if self.game.wining_player == 1:
@@ -296,18 +341,26 @@ class Interface:
         self.bot_choose_canvas.pack(side="top", anchor="center", pady=50)
 
         def changeTagsBot1(screen):
-            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot1 == self.__ZAIMPLEMENTOWANE_BOTY[1]:
+            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[1]:
                 label_bot_1_tag.config(text="   Głębkość ")
-
-            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
+                self.bot1_value.grid(row=0, column=3)
+            elif self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
                 label_bot_1_tag.config(text="   Ilość iteracji: ")
+                self.bot1_value.grid(row=0, column=3)
+            else:
+                label_bot_1_tag.config(text="                   ")
+                self.bot1_value.grid_remove()
 
         def changeTagsBot2(screen):
             if self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot2 == self.__ZAIMPLEMENTOWANE_BOTY[1]:
                 label_bot_2_tag.config(text="   Głębkość ")
-
-            if self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
+                self.bot2_value.grid(row=1, column=3)
+            elif self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
                 label_bot_2_tag.config(text="   Ilość iteracji: ")
+                self.bot2_value.grid(row=1, column=3)
+            else:
+                label_bot_2_tag.config(text="                   ")
+                self.bot2_value.grid_remove()
 
         # Wybor bota 1
         label1 = tk.Label(self.bot_choose_canvas, text="BOT 1: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
@@ -344,20 +397,59 @@ class Interface:
                                   bg=self.__BUTTONS_COLOR)
         return_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=400)
 
-    def move(self, i):
-        if self.game.current_Player == 2:
-            return
-        self.game.dodajKrazek(i)
-        # TODO dodac przerwanie gry i wyswietlenie kto wygral
+
+    def winnerFoundInGameVBot(self):
         if self.game.wining_player == 1:
-            print("Wygral gracz 1")
+            self.wygraneBot1 += 1
+            if self.instancjaBota1 is not None:
+                name = self.instancjaBota1.toString()
+            else:
+                name = "Gracz 1"
+            self.last_winner = "Wygrywa: " + name
+            self.lastWinTime = time.time()
         elif self.game.wining_player == 2:
-            print("Wygral gracz 2")
+            if self.instancjaBota2 is not None:
+                name = self.instancjaBota2.toString()
+            else:
+                name = "Gracz 2"
+
+            self.last_winner = "Wygrywa: " + name
+            self.wygraneBot2 += 1
+            self.lastWinTime = time.time()
         elif self.game.wining_player == 0:
-            print("Nastapil remis")
+            self.wygraneBot1 += 0.5
+            self.wygraneBot2 += 0.5
+            self.lastWinTime = time.time()
+
+    def move(self, i):
+        #if self.game.current_Player == 2:
+        #    return
+        self.game.dodajKrazek(i)
+        if self.game.wining_player != -1:
+            self.winnerFoundInGameVBot()
+            self.game.reset()
+            self.gra1v1()
+            return
+
         self.clear_window()
         self.printBoard()
-        self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
+        if self.instancjaBota1 is not None:
+            t1 = time.time()
+            self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
+            t2 = time.time()
+            self.sumaCzasu1 += round((t2 - t1) * 100000) / 100
+            self.sumaRuchow1 += 1
+        else:
+            t1 = time.time()
+            self.game.dodajKrazek(self.instancjaBota2.decide(self.game))
+            t2 = time.time()
+            self.sumaCzasu2 += round((t2 - t1) * 100000) / 100
+            self.sumaRuchow2 += 1
+
+        if self.game.wining_player != -1:
+            self.winnerFoundInGameVBot()
+            self.game.reset()
+            self.gra1v1()
         self.clear_window()
         self.printBoard()
 
@@ -371,11 +463,15 @@ class Interface:
         self.bot_choose_canvas.pack(side="top", anchor="center", pady=50)
 
         def changeTagsBot1(screen):
-            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot1 == self.__ZAIMPLEMENTOWANE_BOTY[1]:
+            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[1]:
                 label_bot_1_tag.config(text="   Głębkość ")
-
-            if self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
+                self.enemy_stat_entry.grid(row=0, column=3)
+            elif self.bot1.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
                 label_bot_1_tag.config(text="   Ilość iteracji: ")
+                self.enemy_stat_entry.grid(row=0, column=3)
+            else:
+                label_bot_1_tag.config(text="                   ")
+                self.enemy_stat_entry.grid_remove()
 
         # Wybor bota 1
         label1 = tk.Label(self.bot_choose_canvas, text="BOT 1: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
@@ -386,11 +482,18 @@ class Interface:
         label_bot_1_tag = tk.Label(self.bot_choose_canvas, text="   Głębkość ", font=("Arial", 12),
                                    bg=self.__BACKGROUD_COLOR)
         label_bot_1_tag.grid(row=0, column=2)
-        self.bot1_value = tk.Entry(self.bot_choose_canvas)
-        self.bot1_value.grid(row=0, column=3)
+        self.enemy_stat_entry = tk.Entry(self.bot_choose_canvas)
+        self.enemy_stat_entry.grid(row=0, column=3)
+
+        label_choose_side = tk.Label(self.bot_choose_canvas, text="Wybierz strone: ", font=("Arial", 12), bg=self.__BACKGROUD_COLOR)
+        label_choose_side.grid(row=1, column=0)
+
+        options_on_who_start = ["Gracz 1", "Gracz 2"]
+        choose_side_menu = tk.OptionMenu(self.bot_choose_canvas, self.turn, *options_on_who_start)
+        choose_side_menu.grid(row=1, column=1)
 
         start_button = tk.Button(self.screen, text="Rozpocznij gre", fg="black",
-                                 command=lambda: self.gra1v1(self.bot1_value.get()),
+                                 command=lambda: self.gra1v1(self.enemy_stat_entry.get()),
                                  height=self.__WYSOKOSC_PRZYCISKU, width=self.__SZEROKOSC_PRZYCISKU_MENU,
                                  bg=self.__BUTTONS_COLOR)
         start_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=225)
@@ -400,22 +503,61 @@ class Interface:
                                   bg=self.__BUTTONS_COLOR)
         return_button.place(x=self.__ODLEGLOSC_OD_PRAWEJ_KRAWEDZI_PRZYCISKU_MENU, y=400)
 
-    def gra1v1(self, v1):
-        # TODO DODAC MOZLIWOSC WYBORU STRONY DLA GRACZA
-        if self.bot1.get() == "MinMax":
-            self.instancjaBota1 = MinMaxAgent(2, v1)
-        elif self.bot1.get() == "AlphaBeta":
-            self.instancjaBota1 = MinMaxABAgent(2, v1)
-        elif self.bot1.get() == "Random":
-            self.instancjaBota1 = RandomAgent(2)
-        elif self.bot1.get() == "MonteCarloTreeSearch":
-            self.instancjaBota1 = MonteCarloTreeSearchAgent(2, v1, 0.95)
-        #elif self.bot1.get() == "Regresja":
-        #    self.instancjaBota1 = RegresjaAgent(2, int(v1))
+    def gra1v1(self, staty=None):
+        self.game.reset()
+
+        if staty == None: # tu jest makaron z typami, nie przejmujcie sie
+            v1 = self.enemy_stat
+        else:
+            if staty != '':
+                v1 = int(staty)
+                self.enemy_stat = v1
+            else:
+                v1 = 0
+
+        player = 2
+        if self.turn.get() == "Gracz 2":
+            player = 1
+            if self.bot1.get() == "MinMax":
+                self.instancjaBota1 = MinMaxAgent(player, v1)
+            elif self.bot1.get() == "AlphaBeta":
+                self.instancjaBota1 = MinMaxABAgent(player, v1)
+            elif self.bot1.get() == "Random":
+                self.instancjaBota1 = RandomAgent(player)
+            elif self.bot1.get() == "MonteCarloTreeSearch":
+                self.instancjaBota1 = MonteCarloTreeSearchAgent(player, v1, 0.95)
+            elif self.bot1.get() == "Heurystyka statyczna":
+                self.instancjaBota1 = StaticAgent(player)
+            elif self.bot1.get() == "Siec neuronowa":
+                self.instancjaBota1 = NetworkAgent(player)
+        else:
+            if self.bot1.get() == "MinMax": # nie wazne ze jest bot1 - jest git
+                self.instancjaBota2 = MinMaxAgent(player, v1)
+            elif self.bot1.get() == "AlphaBeta":
+                self.instancjaBota2 = MinMaxABAgent(player, v1)
+            elif self.bot1.get() == "Random":
+                self.instancjaBota2 = RandomAgent(player)
+            elif self.bot1.get() == "MonteCarloTreeSearch":
+                self.instancjaBota2 = MonteCarloTreeSearchAgent(player, v1, 0.95)
+            elif self.bot1.get() == "Heurystyka statyczna":
+                self.instancjaBota2 = StaticAgent(player)
+            elif self.bot1.get() == "Siec neuronowa":
+                self.instancjaBota2 = NetworkAgent(player)
+
+
+
         # MIEJSCE NA INNE BOTY, TRZEBA JE BEDZIE ZAINICJALIZOWAC WZGLEDEM WYBORU UZYTKOWNIKA Z DROP DOWN MENU
         board = Board()
         self.clear_window()
-        while board.ifLast():
-            self.clear_window()
-            self.printBoard()
-            break
+
+        if player == 1:
+            t1 = time.time()
+            self.game.dodajKrazek(self.instancjaBota1.decide(self.game))
+            t2 = time.time()
+            self.sumaCzasu1 += round((t2 - t1) * 100000) / 100
+            self.sumaRuchow1 += 1
+
+
+        self.clear_window()
+        self.printBoard()
+

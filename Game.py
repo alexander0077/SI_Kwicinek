@@ -116,6 +116,8 @@ class Game:
         return self.__gameArr
 
     def reset(self):
+        self.current_Player = 1
+        self.wining_player = -1
         self.__gameArr = [([0] * self.__szerokosc) for _ in range(self.__wysokosc)]
 
     def set_board_state(self, state):
