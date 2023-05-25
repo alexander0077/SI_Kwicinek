@@ -353,7 +353,7 @@ class Interface:
                 self.bot1_value.grid_remove()
 
         def changeTagsBot2(screen):
-            if self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot2 == self.__ZAIMPLEMENTOWANE_BOTY[1]:
+            if self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[0] or self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[1]:
                 label_bot_2_tag.config(text="   Głębkość ")
                 self.bot2_value.grid(row=1, column=3)
             elif self.bot2.get() == self.__ZAIMPLEMENTOWANE_BOTY[2]:
