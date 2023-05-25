@@ -232,10 +232,11 @@ class Interface:
                 else:
                     canvas.create_rectangle(x1, y1, x2, y2, fill='red', outline='black')
 
-        for i in range(board_cols):
-            button = tk.Button(self.screen, text="  ", command=lambda i=i: self.move(i),
-                               height=2, width=5)
-            button.place(x=x1 + 2 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 130)
+        if self.instancjaBota2 is None or self.instancjaBota1 is None:
+            for i in range(board_cols):
+                button = tk.Button(self.screen, text="  ", command=lambda i=i: self.move(i),
+                                   height=2, width=5)
+                button.place(x=x1 + 2 - (cell_size + cell_padding) / 2 + i * (cell_size + cell_padding), y=y2 + 130)
 
 
 
