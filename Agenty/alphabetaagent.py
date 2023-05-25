@@ -12,7 +12,7 @@ class MinMaxABAgent:
         self.initial_depth = initial_depth
 
     def toString(self):
-        return "AlfaBetha [głębokość " + str(self.initial_depth) + "]"
+        return "AlfaBeta [głębokość " + str(self.initial_depth) + "]"
     def decide(self, connect4):
         pos_drops = connect4.possible_drops()
         if not pos_drops:
@@ -21,7 +21,7 @@ class MinMaxABAgent:
         for drop in pos_drops:
             tmp = copy.deepcopy(connect4)
             tmp.dodajKrazek(drop)
-            results.append(self.minmax(tmp, self.pNum, 6))
+            results.append(self.minmax(tmp, self.pNum, 6, -1000, 1000))
         allEquall = True
         ele = results[0]
         for i in results:
@@ -37,22 +37,17 @@ class MinMaxABAgent:
             min_index = results.index(min(results))
             return pos_drops[min_index]
 
-    def minmax(self, connect4, maximizingPlayer, glebia, alpha=-1000, beta=1000):
+    def minmax(self, connect4, maximizingPlayer, glebia, alpha, beta):
         if glebia == 0:
             return 0
         pos_drops = connect4.possible_drops()
-        if not pos_drops:
-            for four in connect4.iter_fours():
-                if four == [1, 1, 1, 1]:
-                    return -1
-                elif four == [2, 2, 2, 2]:
-                    return 1
-            return 0
         for four in connect4.iter_fours():
             if four == [1, 1, 1, 1]:
                 return -1
             elif four == [2, 2, 2, 2]:
                 return 1
+        if not pos_drops:
+            return 0
 
         if maximizingPlayer == 1:
             value = -1000
