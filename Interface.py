@@ -297,6 +297,20 @@ class Interface:
 
             self.clear_window()
             self.printBoard()
+            if self.game.wining_player == 1:
+                self.wygraneBot1 += 1
+                self.last_winner = "Wygrywa: " + self.instancjaBota1.toString()
+                break
+            elif self.game.wining_player == 2:
+                self.last_winner = "Wygrywa: " + self.instancjaBota2.toString()
+                self.wygraneBot2 += 1
+                break
+            elif self.game.wining_player == 0:
+                self.wygraneBot1 += 0.5
+                self.wygraneBot2 += 0.5
+                break
+
+
             self.screen.update_idletasks()
             self.screen.update()
 
