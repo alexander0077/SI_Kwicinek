@@ -8,10 +8,10 @@ class NetworkAgent:
         self.my_token = my_token
         self.opponent_token = 3 - my_token
         if my_token == 1 :
-            self.neutral_model = tf.keras.models.load_model('models/reinforced_model_v3.h5') # tu mozecie miec problem z katalogami
+            self.neutral_model = tf.keras.models.load_model('models/reinforced_model_v7.h5') # tu mozecie miec problem z katalogami
             # w razie czego podajcie cala sciezke
         else:
-            self.neutral_model = tf.keras.models.load_model('models/reinforced_model_v3.h5') # tu bedzie model dla gracza 2
+            self.neutral_model = tf.keras.models.load_model('models/gracz2_random_v2.h5') # tu bedzie model dla gracza 2
 
     def toString(self):
         return "Model sieci neuronowej"

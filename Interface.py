@@ -73,6 +73,8 @@ class Interface:
         self.sumaCzasu2 = 0
         self.sumaRuchow1 = 0.0001
         self.sumaRuchow2 = 0.0001
+        self.wygraneBot1 = 0
+        self.wygraneBot2 = 0
         self.instancjaBota2 = None
         self.instancjaBota1 = None
         for widgets in self.screen.winfo_children():
