@@ -256,7 +256,7 @@ class Interface:
             return False
         return True
 
-    def graBOT(self, v1, v2):  # TODO TU BEDZIE CALY PROJEKT TAK W SUMIE
+    def graBOT(self, v1, v2):
         if self.bot1.get() == "MinMax":
             self.instancjaBota1 = MinMaxAgent(1, int(v1))
         elif self.bot1.get() == "AlphaBeta":
@@ -439,8 +439,6 @@ class Interface:
             self.lastWinTime = time.time()
 
     def move(self, i):
-        #if self.game.current_Player == 2:
-        #    return
         self.game.dodajKrazek(i)
         if self.game.wining_player != -1:
             self.winnerFoundInGameVBot()
@@ -523,7 +521,7 @@ class Interface:
     def gra1v1(self, staty=None):
         self.game.reset()
 
-        if staty == None: # tu jest makaron z typami, nie przejmujcie sie
+        if staty == None:
             v1 = self.enemy_stat
         else:
             if staty != '':
@@ -548,7 +546,7 @@ class Interface:
             elif self.bot1.get() == "Siec neuronowa":
                 self.instancjaBota1 = NetworkAgent(player)
         else:
-            if self.bot1.get() == "MinMax": # nie wazne ze jest bot1 - jest git
+            if self.bot1.get() == "MinMax":
                 self.instancjaBota2 = MinMaxAgent(player, v1)
             elif self.bot1.get() == "AlphaBeta":
                 self.instancjaBota2 = MinMaxABAgent(player, v1)

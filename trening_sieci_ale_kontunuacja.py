@@ -4,7 +4,7 @@ import random
 import os
 
 
-def check_if_done(observation): # GIT
+def check_if_done(observation):
     done = [False, 'No Winner Yet']
 
     if 0 not in observation[0]:
@@ -45,7 +45,7 @@ def check_if_done(observation): # GIT
     return done
 
 
-def testing(model, ile_treningu): # funkcja wykonujaca test dla 100 gierek na random agencie i zapisujaca wyniki do pliku
+def testing(model, ile_treningu):
     wygrane = 0
     remisy = 0
     przegrane = 0
@@ -96,9 +96,9 @@ def testing(model, ile_treningu): # funkcja wykonujaca test dla 100 gierek na ra
     result_string += "Bledne ruchy: " + str(invalids) + " Pionowe: " + str(v) + " Poziome: " + str(h) + " Przekatne: " + str(d) + "\n\n"
 
     print(result_string)
-    with open("C:/Users/a9sar/Desktop/SI_Kwicinek/tests_results/random_agent_results", 'a') as plik:
+    with open("tests_results/random_agent_results", 'a') as plik:
         plik.write(result_string)
-    with open("C:/Users/a9sar/Desktop/SI_Kwicinek/tests_results/raw_results", 'a') as plik:
+    with open("tests_results/raw_results", 'a') as plik:
         plik.write(raw_results)
 
 
@@ -122,13 +122,13 @@ def create_model():
 neutral_model = create_model()
 neutral_model.load_weights("models/reinforced_model_v3.h5")
 
-def compute_loss(logits, actions, rewards):  # GIT
+def compute_loss(logits, actions, rewards):
     neg_logprob = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=logits, labels=actions)
     loss = tf.reduce_mean(neg_logprob * rewards)
     return loss
 
 
-def train_step(model, optimizer, observations, actions, rewards):  # GIT
+def train_step(model, optimizer, observations, actions, rewards):
     with tf.GradientTape() as tape:
         # Forward propagate through the agent network
 
@@ -139,7 +139,7 @@ def train_step(model, optimizer, observations, actions, rewards):  # GIT
         optimizer.apply_gradients(zip(grads, model.trainable_variables))
 
 
-def get_action(model, observation, epsilon):  # GIT oprocz reshape(1, 6, 7, 1)
+def get_action(model, observation, epsilon):
     # funkcja na podstawie epsilona wybiera czy podejmowac decyzje sama, czy losowo
     act = np.random.choice(['model', 'random'], 1, p=[1 - epsilon, epsilon])[0]
     observation = np.array(observation).reshape(1, 6, 7, 1)
@@ -154,7 +154,7 @@ def get_action(model, observation, epsilon):  # GIT oprocz reshape(1, 6, 7, 1)
     return action, prob_weights[0]
 
 
-def check_if_action_valid(obs, action):  # GIT - funkcja sprawdza czy wybrany ruch jest valid
+def check_if_action_valid(obs, action):
     if obs[0][action] == 0:
         valid = True
     else:
@@ -168,7 +168,7 @@ def returnRandomPossibleMove(board):
         if check_if_action_valid(board, choice):
             return choice
 
-def player_1_agent(observation, configuration):  # GIT - funkcja wybiera ruch
+def player_1_agent(observation, configuration):
     action, prob_weights = get_action(neutral_model, observation['board'], 0)
     if check_if_action_valid(observation['board'], action):
         return action
@@ -192,7 +192,7 @@ def make_move(board, action, player_num):
             board[row][action] = player_num
             return board
 
-def playingStep(obs, action, player_number): #next_observation, overflow
+def playingStep(obs, action, player_number):
     if not check_if_action_valid(obs, action):
         return obs, True
     else:
@@ -222,7 +222,6 @@ tf.keras.backend.set_floatx('float64')
 # LEARNING RATE
 optimizer = tf.keras.optimizers.Adam(0.00001)
 
-#TODO TU JEST ILE ITERACJI JUZ ZROBIL TEN MODEL
 already_itered = 160000
 
 connect4_board = np.zeros((6, 7))
@@ -244,7 +243,7 @@ for i_episode in range(already_itered, 40000):
 
         done = check_if_done(connect4_board)
 
-        # -----Customize Rewards Here------
+        # tu customizujemy nagrody
         reward = 0
         if done[0] == False:
             reward = 0
@@ -264,7 +263,6 @@ for i_episode in range(already_itered, 40000):
         if overflow == True and done[0] == False:
             reward = -999
             done[0] = True
-        # -----Customize Rewards Here------
 
         if done[0] == False:
             random_move = returnRandomPossibleMove(connect4_board)
@@ -275,9 +273,9 @@ for i_episode in range(already_itered, 40000):
                 if 'Vertical' in done[1]:
                     reward = 5
                 elif 'Horizontal' in done[1]:
-                    reward = 40 # poprzednio 15
+                    reward = 40
                 elif 'Diagonal' in done[1]:
-                    reward = 60 # poprzednio 20
+                    reward = 60
 
                 if 'Player 2' in done[1]:
                     reward = -1 * abs(reward)
@@ -297,7 +295,5 @@ for i_episode in range(already_itered, 40000):
                 testing(neutral_model, i_episode)
 
             if i_episode % 100 == 0:
-                neutral_model.save('C:/Users/a9sar/Desktop/SI_Kwicinek/models/reinforced_model_v3.h5')
-                # "reinforced_model" TO MODEL PO 3K TRENINGU NA RANDOM AGENT
-                # "reinforced_model_v2" TO MODEL PO 6K-7k TRENINGU NA RANDOM AGENT
+                neutral_model.save('models/reinforced_model_v3.h5')
             break
